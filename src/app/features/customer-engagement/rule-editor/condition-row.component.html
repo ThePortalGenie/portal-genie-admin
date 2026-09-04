@@ -31,14 +31,15 @@
 
   @if (selectedMetric(); as selected) {
     @if (isLifecycle()) {
-      <div class="pg-field condition-row__days">
+      <div class="pg-field condition-row__numeric">
         <label class="pg-label visually-hidden" [attr.for]="'offset-' + fieldId()">Days</label>
         <input
-          class="pg-control"
+          class="pg-control pg-control--numeric"
           [id]="'offset-' + fieldId()"
           type="number"
           min="0"
           step="1"
+          inputmode="numeric"
           [class.pg-control--error]="!!showIssue('offsetDays')"
           [attr.aria-invalid]="!!showIssue('offsetDays')"
           [value]="offsetValue()"
@@ -132,10 +133,11 @@
             <span class="pg-label visually-hidden" [id]="'range-label-' + fieldId()">From and to</span>
             <div class="range" role="group" [attr.aria-labelledby]="'range-label-' + fieldId()">
               <input
-                class="pg-control"
+                class="pg-control pg-control--numeric"
                 type="number"
                 min="0"
                 step="1"
+                inputmode="numeric"
                 [class.pg-control--error]="!!showIssue('value')"
                 [attr.aria-label]="'From for ' + metricLabel(selected)"
                 [value]="rangePart('min')"
@@ -143,10 +145,11 @@
               />
               <span>and</span>
               <input
-                class="pg-control"
+                class="pg-control pg-control--numeric"
                 type="number"
                 min="0"
                 step="1"
+                inputmode="numeric"
                 [class.pg-control--error]="!!showIssue('value')"
                 [attr.aria-label]="'To for ' + metricLabel(selected)"
                 [value]="rangePart('max')"
@@ -161,17 +164,18 @@
             }
           </div>
         } @else {
-          <div class="pg-field condition-row__days">
+          <div class="pg-field condition-row__numeric">
             <label class="pg-label visually-hidden" [attr.for]="'value-' + fieldId()">
               {{ selected.type === 'duration_days' ? 'Days' : 'Number' }}
             </label>
             <div class="number-wrap">
               <input
-                class="pg-control"
+                class="pg-control pg-control--numeric"
                 [id]="'value-' + fieldId()"
                 type="number"
                 min="0"
                 step="1"
+                inputmode="numeric"
                 [class.pg-control--error]="!!showIssue('value')"
                 [attr.aria-invalid]="!!showIssue('value')"
                 [value]="numberValue()"

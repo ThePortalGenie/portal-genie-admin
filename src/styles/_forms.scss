@@ -27,6 +27,21 @@
   font: inherit;
 }
 
+.pg-control,
+.pg-select {
+  height: var(--control-height);
+}
+
+input[type='number'].pg-control {
+  appearance: textfield;
+}
+
+input[type='number'].pg-control::-webkit-outer-spin-button,
+input[type='number'].pg-control::-webkit-inner-spin-button {
+  appearance: none;
+  margin: 0;
+}
+
 .pg-textarea {
   min-height: 4.5rem;
   padding: var(--space-3) var(--control-padding-x);

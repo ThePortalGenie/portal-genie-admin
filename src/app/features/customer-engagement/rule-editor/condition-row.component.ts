@@ -12,10 +12,15 @@ import {
 } from './condition-draft.helpers';
 import { ConditionFormGroup } from './condition-form';
 import {
+  applyRangePart,
+  displayNumericInput,
+  parseNumericInput,
+} from './numeric-input';
+import { booleanValueLabels, EDITOR_OPERATOR_LABELS, metricEditorLabel } from './metric-display';
+import {
   defaultLifecycleDirection,
   isLifecycleTimingMetric,
 } from './lifecycle-authoring';
-import { booleanValueLabels, EDITOR_OPERATOR_LABELS, metricEditorLabel } from './metric-display';
 
 @Component({
   selector: 'app-condition-row',
@@ -119,49 +124,37 @@ export class ConditionRow {
   }
 
   protected onNumberChange(event: Event): void {
-    const raw = (event.target as HTMLInputElement).value;
-    this.group().controls.value.setValue(raw === '' ? null : Number(raw));
+    const value = parseNumericInput((event.target as HTMLInputElement).value);
+    this.group().controls.value.setValue(value);
+    this.group().controls.value.markAsTouched();
   }
 
   protected onOffsetChange(event: Event): void {
-    const raw = (event.target as HTMLInputElement).value;
-    this.group().controls.offsetDays.setValue(raw === '' ? null : Number(raw));
+    const value = parseNumericInput((event.target as HTMLInputElement).value);
+    this.group().controls.offsetDays.setValue(value);
     this.group().controls.offsetDays.markAsTouched();
   }
 
   protected offsetValue(): string {
-    const value = this.group().controls.offsetDays.value;
-    return typeof value === 'number' && Number.isFinite(value) ? String(value) : '';
+    return displayNumericInput(this.group().controls.offsetDays.value);
   }
 
   protected onRangeChange(part: 'min' | 'max', event: Event): void {
-    const raw = (event.target as HTMLInputElement).value;
-    const amount = raw === '' ? null : Number(raw);
-    const current = this.group().controls.value.value;
-    const range =
-      typeof current === 'object' && current !== null && 'min' in current
-        ? { ...current }
-        : { min: Number.NaN, max: Number.NaN };
-    range[part] = amount ?? Number.NaN;
-    if (!Number.isFinite(range.min) || !Number.isFinite(range.max)) {
-      this.group().controls.value.setValue(null);
-      return;
-    }
-    this.group().controls.value.setValue(range);
+    const amount = parseNumericInput((event.target as HTMLInputElement).value);
+    this.group().controls.value.setValue(applyRangePart(this.group().controls.value.value, part, amount));
+    this.group().controls.value.markAsTouched();
   }
 
   protected rangePart(part: 'min' | 'max'): string {
     const value = this.group().controls.value.value;
     if (typeof value === 'object' && value !== null && part in value) {
-      const amount = value[part];
-      return Number.isFinite(amount) ? String(amount) : '';
+      return displayNumericInput(value[part]);
     }
     return '';
   }
 
   protected numberValue(): string {
-    const value = this.group().controls.value.value;
-    return typeof value === 'number' && Number.isFinite(value) ? String(value) : '';
+    return displayNumericInput(this.group().controls.value.value);
   }
 
   protected booleanValue(): string {
