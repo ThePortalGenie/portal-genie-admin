@@ -44,6 +44,30 @@ export type Rule = {
   updatedAt: string;
 };
 
+/** Editor state. Incomplete fields use empty string / null until the administrator fills them. */
+export type ConditionDraft = {
+  id: string;
+  metricKey: string;
+  operator: MetricOperator | '';
+  value: ConditionValue;
+};
+
+export type RuleConditionGroupDraft = {
+  id: string;
+  combinator: LogicalOperator;
+  children: ConditionDraft[];
+};
+
+export type RuleDraft = {
+  name: string;
+  description: string;
+  category: RuleCategory | '';
+  status: RuleStatus;
+  rootGroup: RuleConditionGroupDraft;
+  templateId: string;
+  timing: RuleTiming;
+};
+
 export function isRuleConditionGroup(
   node: RuleConditionGroup | RuleCondition,
 ): node is RuleConditionGroup {

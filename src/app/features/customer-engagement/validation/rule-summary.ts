@@ -24,6 +24,31 @@ export function summariseRule(rule: Rule, metrics: readonly CustomerMetric[]): s
   return [timingText, conditionText].filter((part) => part.length > 0).join(' · ');
 }
 
+export function summariseTimingPhrase(timing: RuleTiming): string {
+  if (timing.mode === 'on_match') {
+    return 'When the conditions become true';
+  }
+  return summariseTiming(timing) || 'Timing not set yet';
+}
+
+export function summariseConditionLine(
+  condition: { metricKey: string; operator: string; value: ConditionValue },
+  metric: CustomerMetric | undefined,
+): string {
+  if (!condition.metricKey || !condition.operator) {
+    return '';
+  }
+  return summariseCondition(
+    {
+      id: '',
+      metricKey: condition.metricKey,
+      operator: condition.operator as MetricOperator,
+      value: condition.value,
+    },
+    metric,
+  );
+}
+
 export function summariseTiming(timing: RuleTiming): string {
   if (timing.mode === 'on_match') {
     return '';

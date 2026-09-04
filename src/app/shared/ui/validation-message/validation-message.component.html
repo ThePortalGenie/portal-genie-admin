@@ -1,0 +1,8 @@
+<p
+  class="ui-validation-message"
+  [class.ui-validation-message--error]="tone() === 'error'"
+  [class.ui-validation-message--warning]="tone() === 'warning'"
+>
+  <span class="ui-validation-message__label">{{ tone() === 'warning' ? 'Warning' : 'Error' }}:</span>
+  {{ message() }}
+</p>

@@ -7,7 +7,9 @@ import {
   Rule,
   RuleCondition,
   RuleConditionGroup,
+  RuleDraft,
 } from '../../../features/customer-engagement/models/rule.model';
+import { ruleFromDraft } from '../../../features/customer-engagement/rule-editor/rule-draft.helpers';
 import { RuleService } from '../rule.service';
 import { RULE_FIXTURES } from './fixtures/rules.fixture';
 import { mockNotFound, mockOf, mockVoid } from './mock-async';
@@ -23,6 +25,33 @@ export class MockRuleService extends RuleService {
   override getById(id: string): Observable<Rule> {
     const rule = this.rules.find((item) => item.id === id);
     return rule ? mockOf(rule) : mockNotFound('Rule');
+  }
+
+  override create(draft: RuleDraft): Observable<Rule> {
+    const now = new Date().toISOString();
+    const rule = ruleFromDraft(draft, {
+      id: crypto.randomUUID(),
+      createdAt: now,
+      updatedAt: now,
+    });
+    this.rules.unshift(rule);
+    return mockOf(rule);
+  }
+
+  override update(id: string, draft: RuleDraft): Observable<Rule> {
+    const index = this.rules.findIndex((item) => item.id === id);
+    if (index < 0) {
+      return mockNotFound('Rule');
+    }
+
+    const existing = this.rules[index];
+    const rule = ruleFromDraft(draft, {
+      id,
+      createdAt: existing.createdAt,
+      updatedAt: new Date().toISOString(),
+    });
+    this.rules[index] = rule;
+    return mockOf(rule);
   }
 
   override duplicate(id: string): Observable<Rule> {

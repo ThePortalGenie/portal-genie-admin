@@ -1,0 +1,87 @@
+<fieldset class="timing">
+  <legend class="visually-hidden">When should this send?</legend>
+
+  <div class="timing__modes">
+    <label class="timing__mode">
+      <input type="radio" [formControl]="kind()" value="on_match" />
+      <span>
+        <strong>When the conditions become true</strong>
+        <span class="pg-hint">The communication becomes eligible when a customer starts matching this rule.</span>
+      </span>
+    </label>
+    <label class="timing__mode">
+      <input type="radio" [formControl]="kind()" value="relative" />
+      <span>
+        <strong>Relative to a lifecycle date</strong>
+        <span class="pg-hint">Send a number of days before or after a catalog date, such as registration or trial expiry.</span>
+      </span>
+    </label>
+  </div>
+
+  @if (kind().value === 'relative') {
+    <div class="timing__relative">
+      <div class="pg-field">
+        <label class="pg-label" for="timing-anchor">
+          Anchor <span class="pg-required" aria-hidden="true">*</span>
+        </label>
+        <select
+          class="pg-select"
+          id="timing-anchor"
+          [class.pg-control--error]="!!issue('timing.anchorMetricKey')"
+          [formControl]="anchor()"
+        >
+          @for (metric of anchors(); track metric.key) {
+            <option [value]="metric.key">{{ metric.displayName }}</option>
+          }
+        </select>
+        @if (issue('timing.anchorMetricKey'); as item) {
+          <ui-validation-message [message]="item.message" />
+        }
+      </div>
+
+      <div class="pg-field">
+        <label class="pg-label" for="timing-direction">
+          Relationship <span class="pg-required" aria-hidden="true">*</span>
+        </label>
+        <select
+          class="pg-select"
+          id="timing-direction"
+          [class.pg-control--error]="!!issue('timing.mode')"
+          [formControl]="direction()"
+        >
+          @for (item of directions(); track item) {
+            <option [value]="item">{{ item === 'before' ? 'Before' : 'After' }}</option>
+          }
+        </select>
+        @if (issue('timing.mode'); as item) {
+          <ui-validation-message [message]="item.message" />
+        }
+      </div>
+
+      <div class="pg-field">
+        <label class="pg-label" for="timing-days">
+          Number of days <span class="pg-required" aria-hidden="true">*</span>
+        </label>
+        <div class="number-wrap">
+          <input
+            class="pg-control"
+            id="timing-days"
+            type="number"
+            min="0"
+            step="1"
+            [class.pg-control--error]="!!issue('timing.delayDays')"
+            [formControl]="days()"
+          />
+          <span class="suffix">days</span>
+        </div>
+        <p class="pg-hint">0 is the date itself. Use before or after rather than a minus sign.</p>
+        @if (issue('timing.delayDays'); as item) {
+          <ui-validation-message [message]="item.message" />
+        }
+        @if (warning('timing.delayDays'); as item) {
+          <ui-validation-message [message]="item.message" tone="warning" />
+        }
+      </div>
+    </div>
+  }
+</fieldset>

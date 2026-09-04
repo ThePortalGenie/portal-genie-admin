@@ -1,0 +1,20 @@
+:host {
+  display: block;
+}
+
+.ui-validation-message {
+  margin-top: var(--space-1);
+  font-size: var(--font-size-caption);
+}
+
+.ui-validation-message--error {
+  color: var(--color-destructive);
+}
+
+.ui-validation-message--warning {
+  color: var(--color-warning);
+}
+
+.ui-validation-message__label {
+  font-weight: var(--font-weight-medium);
+}

@@ -1,9 +1,168 @@
-<app-page-header
-  [title]="title()"
-  [description]="description()"
-  [breadcrumbs]="breadcrumbs()"
-/>
+<app-page-header [title]="title()" [description]="description" [breadcrumbs]="breadcrumbs()">
+  @if (loadState() === 'ready') {
+    <ui-button variant="secondary" [disabled]="saving()" (click)="cancel()">Cancel</ui-button>
+    <ui-button [disabled]="!canSave()" (click)="save()">
+      {{ saving() ? 'Saving…' : 'Save Rule' }}
+    </ui-button>
+  }
+</app-page-header>
 
-<section class="placeholder-panel" aria-label="Rule editor workspace">
-  <p>The rule builder will be added in a later phase.</p>
-</section>
+@switch (loadState()) {
+  @case ('loading') {
+    <p class="editor-status" aria-live="polite" aria-busy="true">Loading rule…</p>
+  }
+  @case ('error') {
+    <ui-error-state
+      title="This rule could not be loaded"
+      message="Try again. If the problem continues, return to the rules list."
+      (retry)="retry()"
+    />
+  }
+  @case ('not-found') {
+    <ui-empty-state
+      title="This rule does not exist"
+      message="It may have been deleted, or the address is incorrect."
+    >
+      <ui-button variant="secondary" (click)="cancel()">Back to Rules</ui-button>
+    </ui-empty-state>
+  }
+  @default {
+    <div class="editor" [formGroup]="form">
+      <div class="editor__form">
+        <section class="editor-section" aria-labelledby="details-heading">
+          <h2 id="details-heading">Rule details</h2>
+          <div class="details-grid">
+            <div class="pg-field details-grid__name">
+              <label class="pg-label" for="rule-name">
+                Rule name <span class="pg-required" aria-hidden="true">*</span>
+              </label>
+              <input
+                class="pg-control"
+                id="rule-name"
+                type="text"
+                formControlName="name"
+                [class.pg-control--error]="!!fieldError('name')"
+                [attr.aria-invalid]="!!fieldError('name')"
+                autocomplete="off"
+              />
+              @if (fieldError('name'); as issue) {
+                <ui-validation-message [message]="issue.message" />
+              }
+            </div>
+
+            <div class="pg-field">
+              <label class="pg-label" for="rule-category">
+                Category <span class="pg-required" aria-hidden="true">*</span>
+              </label>
+              <select
+                class="pg-select"
+                id="rule-category"
+                formControlName="category"
+                [class.pg-control--error]="!!fieldError('category')"
+                [attr.aria-invalid]="!!fieldError('category')"
+              >
+                <option value="">Choose a category</option>
+                @for (option of categoryOptions; track option.id) {
+                  <option [value]="option.id">{{ option.label }}</option>
+                }
+              </select>
+              @if (fieldError('category'); as issue) {
+                <ui-validation-message [message]="issue.message" />
+              }
+            </div>
+
+            <div class="pg-field">
+              <span class="pg-label" id="rule-status-label">
+                Status <span class="pg-required" aria-hidden="true">*</span>
+              </span>
+              <div class="pg-segmented" role="radiogroup" aria-labelledby="rule-status-label">
+                @for (status of statuses; track status) {
+                  <label class="pg-segmented__option">
+                    <input type="radio" formControlName="status" [value]="status" />
+                    {{ statusLabels[status] }}
+                  </label>
+                }
+              </div>
+            </div>
+          </div>
+
+          <div class="pg-field">
+            <label class="pg-label" for="rule-description">Description</label>
+            <textarea
+              class="pg-textarea"
+              id="rule-description"
+              formControlName="description"
+              rows="3"
+            ></textarea>
+          </div>
+        </section>
+
+        <section class="editor-section" aria-labelledby="who-heading">
+          <h2 id="who-heading">Who</h2>
+          <p class="section-lead">Customers who match these conditions.</p>
+          <app-condition-list
+            [combinator]="form.controls.combinator"
+            [conditions]="conditions"
+            [metrics]="metrics()"
+            [issues]="validation().errors"
+            [showErrors]="submitted()"
+            (add)="addCondition()"
+            (remove)="removeCondition($event)"
+          />
+        </section>
+
+        <section class="editor-section" aria-labelledby="when-heading">
+          <h2 id="when-heading">When</h2>
+          <p class="section-lead">When the communication should become eligible. This does not send email.</p>
+          <app-timing-fields
+            [kind]="form.controls.timingKind"
+            [anchor]="form.controls.timingAnchor"
+            [direction]="form.controls.timingDirection"
+            [days]="form.controls.timingDays"
+            [metrics]="metrics()"
+            [issues]="allIssues()"
+            [showErrors]="submitted()"
+          />
+          <p class="pg-hint timing-note">
+            Each customer should receive this communication once when they qualify. Sending and
+            deduplication happen outside this application.
+          </p>
+        </section>
+
+        <section class="editor-section" aria-labelledby="what-heading">
+          <h2 id="what-heading">What</h2>
+          <p class="section-lead">The system communication to send. Templates cannot be edited here.</p>
+          <app-template-picker
+            [control]="form.controls.templateId"
+            [templates]="templates()"
+            [issues]="validation().errors"
+            [showErrors]="submitted()"
+          />
+        </section>
+
+        <div class="editor-footer">
+          @if (saveError()) {
+            <ui-validation-message message="The rule could not be saved. Try again." />
+          }
+          <div class="editor-footer__actions">
+            <ui-button variant="secondary" [disabled]="saving()" (click)="cancel()">Cancel</ui-button>
+            <ui-button [disabled]="!canSave()" (click)="save()">
+              {{ saving() ? 'Saving…' : 'Save Rule' }}
+            </ui-button>
+          </div>
+        </div>
+      </div>
+
+      <div class="editor__aside">
+        <app-rule-summary-card
+          [summary]="summary()"
+          [errors]="validation().errors"
+          [warnings]="validation().warnings"
+          [showIssueList]="true"
+        />
+      </div>
+    </div>
+  }
+}
+
+<ui-confirm-dialog />

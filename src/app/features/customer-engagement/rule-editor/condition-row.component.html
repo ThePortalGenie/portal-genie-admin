@@ -1,0 +1,174 @@
+<div class="condition-row" [formGroup]="group()">
+  <div class="pg-field">
+    <label class="pg-label" [attr.for]="'metric-' + fieldId()">
+      Metric <span class="pg-required" aria-hidden="true">*</span>
+    </label>
+    <select
+      class="pg-select"
+      [id]="'metric-' + fieldId()"
+      [class.pg-control--error]="!!showIssue('metricKey')"
+      [attr.aria-invalid]="!!showIssue('metricKey')"
+      formControlName="metricKey"
+      (change)="onMetricChange()"
+    >
+      <option value="">Choose a metric</option>
+      @for (group of groupedMetrics(); track group.id) {
+        <optgroup [label]="group.label">
+          @for (item of group.metrics; track item.key) {
+            <option [value]="item.key">{{ item.displayName }}</option>
+          }
+        </optgroup>
+      }
+    </select>
+    @if (showIssue('metricKey'); as issue) {
+      <ui-validation-message [message]="issue.message" />
+    }
+  </div>
+
+  @if (metric(); as selected) {
+    @if (selected.type === 'boolean') {
+      <p class="operator-static">
+        <span class="pg-label">Operator</span>
+        <span>is</span>
+      </p>
+      <div class="pg-field">
+        <label class="pg-label" [attr.for]="'boolean-' + fieldId()">
+          Value <span class="pg-required" aria-hidden="true">*</span>
+        </label>
+        <select
+          class="pg-select"
+          [id]="'boolean-' + fieldId()"
+          [class.pg-control--error]="!!showIssue('operator')"
+          [attr.aria-invalid]="!!showIssue('operator')"
+          [value]="booleanValue()"
+          (change)="onBooleanChange($event)"
+        >
+          <option value="">Choose</option>
+          <option value="yes">Yes</option>
+          <option value="no">No</option>
+        </select>
+        @if (showIssue('operator'); as issue) {
+          <ui-validation-message [message]="issue.message" />
+        }
+      </div>
+    } @else {
+      <div class="pg-field">
+        <label class="pg-label" [attr.for]="'operator-' + fieldId()">
+          Operator <span class="pg-required" aria-hidden="true">*</span>
+        </label>
+        <select
+          class="pg-select"
+          [id]="'operator-' + fieldId()"
+          [class.pg-control--error]="!!showIssue('operator')"
+          [attr.aria-invalid]="!!showIssue('operator')"
+          formControlName="operator"
+          (change)="onOperatorChange()"
+        >
+          @for (operator of selected.operators; track operator) {
+            <option [value]="operator">{{ operatorLabels[operator] }}</option>
+          }
+        </select>
+        @if (showIssue('operator'); as issue) {
+          <ui-validation-message [message]="issue.message" />
+        }
+      </div>
+
+      @if (selected.type === 'enum') {
+        <div class="pg-field">
+          <label class="pg-label" [attr.for]="'value-' + fieldId()">
+            Value <span class="pg-required" aria-hidden="true">*</span>
+          </label>
+          <select
+            class="pg-select"
+            [id]="'value-' + fieldId()"
+            [class.pg-control--error]="!!showIssue('value')"
+            [attr.aria-invalid]="!!showIssue('value')"
+            [value]="enumValue()"
+            (change)="onEnumChange($event)"
+          >
+            <option value="">Choose</option>
+            @for (option of selected.enumValues; track option.value) {
+              <option [value]="option.value">{{ option.label }}</option>
+            }
+          </select>
+          @if (showIssue('value'); as issue) {
+            <ui-validation-message [message]="issue.message" />
+          }
+        </div>
+      } @else if (selected.type === 'number' || selected.type === 'duration_days') {
+        @if (group().controls.operator.value === 'between') {
+          <div class="pg-field">
+            <span class="pg-label" id="range-label-{{ fieldId() }}">
+              Value <span class="pg-required" aria-hidden="true">*</span>
+            </span>
+            <div class="range" role="group" [attr.aria-labelledby]="'range-label-' + fieldId()">
+              <input
+                class="pg-control"
+                type="number"
+                min="0"
+                step="1"
+                [class.pg-control--error]="!!showIssue('value')"
+                [attr.aria-label]="'From for ' + selected.displayName"
+                [value]="rangePart('min')"
+                (input)="onRangeChange('min', $event)"
+              />
+              <span>and</span>
+              <input
+                class="pg-control"
+                type="number"
+                min="0"
+                step="1"
+                [class.pg-control--error]="!!showIssue('value')"
+                [attr.aria-label]="'To for ' + selected.displayName"
+                [value]="rangePart('max')"
+                (input)="onRangeChange('max', $event)"
+              />
+              @if (selected.type === 'duration_days') {
+                <span class="suffix">days</span>
+              }
+            </div>
+            @if (showIssue('value'); as issue) {
+              <ui-validation-message [message]="issue.message" />
+            }
+          </div>
+        } @else {
+          <div class="pg-field">
+            <label class="pg-label" [attr.for]="'value-' + fieldId()">
+              Value <span class="pg-required" aria-hidden="true">*</span>
+            </label>
+            <div class="number-wrap">
+              <input
+                class="pg-control"
+                [id]="'value-' + fieldId()"
+                type="number"
+                min="0"
+                step="1"
+                [class.pg-control--error]="!!showIssue('value')"
+                [attr.aria-invalid]="!!showIssue('value')"
+                [value]="numberValue()"
+                (input)="onNumberChange($event)"
+              />
+              @if (selected.type === 'duration_days') {
+                <span class="suffix">days</span>
+              }
+            </div>
+            @if (showIssue('value'); as issue) {
+              <ui-validation-message [message]="issue.message" />
+            }
+          </div>
+        }
+      }
+    }
+  }
+
+  <div class="condition-row__remove">
+    <button
+      class="remove"
+      type="button"
+      [attr.aria-label]="'Remove condition'"
+      (click)="remove.emit()"
+    >
+      Remove
+    </button>
+  </div>
+</div>

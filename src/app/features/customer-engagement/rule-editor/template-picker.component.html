@@ -1,0 +1,60 @@
+<div class="template-picker">
+  <div class="pg-field">
+    <label class="pg-label" for="template-search">Find a template</label>
+    <input
+      class="pg-control"
+      id="template-search"
+      type="search"
+      autocomplete="off"
+      [value]="query()"
+      (input)="onQueryInput($event)"
+      placeholder="Search by name or purpose"
+    />
+  </div>
+
+  <div
+    class="template-picker__list"
+    role="radiogroup"
+    aria-label="Communication template"
+    [attr.aria-invalid]="!!issue()"
+  >
+    @for (group of groups(); track group.category) {
+      <section class="template-group">
+        <h3 class="template-group__title">{{ group.label }}</h3>
+        @for (template of group.templates; track template.id) {
+          <label
+            class="template-option"
+            [class.template-option--selected]="control().value === template.id"
+          >
+            <input type="radio" [formControl]="control()" [value]="template.id" />
+            <span class="template-option__body">
+              <span class="template-option__name">{{ template.name }}</span>
+              @if (control().value === template.id) {
+                <span class="template-option__state">Selected</span>
+              }
+              <span class="template-option__meta">{{ template.lifecycleStage }}</span>
+              <span class="template-option__purpose">{{ template.purpose }}</span>
+            </span>
+          </label>
+        }
+      </section>
+    } @empty {
+      <p class="pg-hint">No templates match this search.</p>
+    }
+  </div>
+
+  @if (issue(); as item) {
+    <ui-validation-message [message]="item.message" />
+  }
+
+  @if (selected(); as template) {
+    <aside class="selected-card" aria-label="Selected communication">
+      <p class="selected-card__kicker">Selected communication</p>
+      <p class="selected-card__name">{{ template.name }}</p>
+      <p class="selected-card__meta">
+        {{ categoryLabels[template.category] }} · {{ template.lifecycleStage }}
+      </p>
+      <p>{{ template.purpose }}</p>
+    </aside>
+  }
+</div>

@@ -1,0 +1,30 @@
+<div class="condition-list">
+  <div class="pg-field combinator">
+    <label class="pg-label" for="condition-combinator">Match</label>
+    <select class="pg-select" id="condition-combinator" [formControl]="combinator()">
+      <option value="and">All conditions</option>
+      <option value="or">Any condition</option>
+    </select>
+    <p class="pg-hint">Who should this apply to? Timing is set separately below.</p>
+  </div>
+
+  @if (groupIssue(); as issue) {
+    <ui-validation-message [message]="issue.message" />
+  }
+
+  <ul class="condition-list__rows">
+    @for (condition of conditions().controls; track condition.controls.id.value; let index = $index) {
+      <li>
+        <app-condition-row
+          [group]="condition"
+          [metrics]="metrics()"
+          [issues]="issuesFor(index)"
+          [showErrors]="showErrors()"
+          (remove)="remove.emit(index)"
+        />
+      </li>
+    }
+  </ul>
+
+  <ui-button variant="secondary" (click)="add.emit()">Add condition</ui-button>
+</div>

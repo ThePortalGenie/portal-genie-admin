@@ -17,9 +17,9 @@ No service in this list sends email, talks to Postmark, evaluates customer popul
 - List rules (for the table; filtering may be client-side in v1)
 - Get one rule by id
 - Duplicate a rule (`duplicate(id)` — used by the Rules list; copies are Disabled)
+- Create / update from `RuleDraft`
+- Set status (active / disabled)
 - Delete
-- Set status (active / disabled) — may be a dedicated method or implied by update
-- Create / update from `RuleDraft` — deferred until the rule builder phase
 
 **Does not own:** templates, metric definitions, customer lists, evaluation, execution, delivery, communication history.
 

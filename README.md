@@ -6,9 +6,9 @@ Frontend-only Angular app. APIs, databases, authentication, and email delivery w
 
 ## Current implementation status
 
-**Phase 3 — Rules management.** The branded shell from Phase 2 now hosts a production-quality Rules list at `/engagement/rules`. Administrators can search, filter, duplicate, enable/disable, and delete mock rules. Create and Edit still open placeholder pages — the visual Rule Builder is not built yet.
+**Phase 4 — Rule Builder.** Administrators can create and edit engagement rules at `/engagement/rules/new` and `/engagement/rules/:id`. The editor defines who qualifies (one condition group), when the communication should become eligible, and which system template to send. Data remains mock-backed. Create defaults to **Disabled**.
 
-Not yet built: rule builder, template library UI, Customer Usage, Settings, HTTP APIs, authentication, email delivery.
+Still not built: template library UI, Customer Usage, Settings, HTTP APIs, authentication, email delivery, nested condition-group UI, recipient preview.
 
 The sidebar uses a **text brand treatment**. A clean reusable Portal Genie G-mark is not in the repository; supply a transparent logo asset before replacing the text lockup. Do not invent or redraw the logo.
 
@@ -37,7 +37,17 @@ Output: `dist/portal-genie-admin/`.
 npm test
 ```
 
-Focused unit tests cover search/filter behaviour, duplicate naming, duplicate status, and human-readable rule summaries. Vitest runs these as pure TypeScript tests (no TestBed).
+Vitest runs focused unit tests of domain and editor logic (no TestBed).
+
+## Type check
+
+Use the no-emit type check. Do **not** run `tsc -b` as a verification step — that previously emitted JavaScript next to the TypeScript sources.
+
+```bash
+npm run typecheck
+```
+
+This runs `tsc -p tsconfig.typecheck.json --noEmit`. Application `tsconfig` files also set `"noEmit": true`, so a stray `tsc -b` will not write `.js` files into `src/`.
 
 ## Current routes
 
@@ -45,21 +55,27 @@ Focused unit tests cover search/filter behaviour, duplicate naming, duplicate st
 | --- | --- |
 | `/` | Redirect to `/engagement/rules` |
 | `/engagement/rules` | Rules list (mock data) |
-| `/engagement/rules/new` | Create Rule placeholder |
-| `/engagement/rules/:id` | Edit Rule placeholder (no data fetch) |
+| `/engagement/rules/new` | Create Rule |
+| `/engagement/rules/:id` | Edit Rule (loads the mock rule; unknown ids show not found) |
 | `/engagement/templates` | Communication Templates placeholder |
 | any other path | Page not found (inside the shell) |
 
+## Rule Builder notes
+
+- Presentation injects `RuleService`, `TemplateService`, and `MetricCatalogService`. Pages do not import `mock/` fixtures.
+- New rules default to Disabled until the administrator chooses Active.
+- v1 shows one AND/OR condition group. Nested groups remain in the domain model only.
+- Boolean conditions use a Yes/No control and are stored as `is_true` / `is_false` (catalog operators).
+- Date metrics in conditions support `is_empty` only (approved catalog). Timing uses registration (after) and trial expiry (before/after).
+- Save is disabled while blocking validation errors exist. A delay of more than 365 days is a warning only.
+- Cancel confirms when the draft differs from the loaded/created snapshot.
+
 ## Phase 3 implementation notes
 
-- Presentation pages inject `RuleService`, `TemplateService`, and `MetricCatalogService`. Mock adapters are provided in `app.config.ts` and can be replaced with HTTP implementations later without rewriting the list page.
-- Sample rules and templates live under `src/app/core/data/mock/`. Feature pages do not import that folder.
 - Duplicate runs on the list via `RuleService.duplicate()`. Copies are named `{name} (Copy)` (then `(Copy 2)`, …) and always start as **Disabled**.
-- Overview counts (total / active / disabled) are taken from the full loaded set, not the filtered view. They are a configuration summary, not analytics.
-- Search is client-side and immediate (name, description, and template name). The mock list is small enough that debounce is unnecessary.
-- Narrow viewports keep all table columns and scroll horizontally rather than stacking a seven-column grid.
-- Disabling an active rule still asks for confirmation (approved UX). Enabling does not.
-- Create / update (`RuleDraft`) is not on the service yet; it belongs with the Rule Builder.
+- Overview counts (total / active / disabled) are taken from the full loaded set, not the filtered view.
+- Search is client-side (name, description, and template name).
+- Narrow viewports keep all table columns and scroll horizontally.
 
 ## Documentation map
 
@@ -79,7 +95,7 @@ Focused unit tests cover search/filter behaviour, duplicate naming, duplicate st
 | --- | --- |
 | `docs/architecture/application-architecture.md` | Overview, decisions, resolved product questions. |
 | `docs/architecture/navigation-and-routes.md` | Sitemap, routes, shell, responsive behaviour. |
-| `docs/architecture/customer-engagement-ux.md` | Rules list, editor, template library (editor/library not built yet). |
+| `docs/architecture/customer-engagement-ux.md` | Rules list, editor, template library. |
 | `docs/architecture/domain-model.md` | Conceptual frontend models. |
 | `docs/architecture/metric-catalog.md` | Metric catalog. |
 | `docs/architecture/frontend-services.md` | Service abstractions and folder plan. |

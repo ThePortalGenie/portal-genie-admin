@@ -22,6 +22,13 @@ export const METRIC_CATEGORIES = ['lifecycle', 'branding', 'activity', 'content'
 
 export type MetricCategory = (typeof METRIC_CATEGORIES)[number];
 
+export const METRIC_CATEGORY_LABELS: Record<MetricCategory, string> = {
+  lifecycle: 'Lifecycle',
+  branding: 'Branding',
+  activity: 'Activity',
+  content: 'Content',
+};
+
 export type MetricEnumValue = {
   value: string;
   label: string;

@@ -1,0 +1,85 @@
+.pg-field {
+  display: flex;
+  flex-direction: column;
+  gap: var(--space-1);
+}
+
+.pg-label {
+  font-size: var(--font-size-caption);
+  font-weight: var(--font-weight-medium);
+  color: var(--color-text-muted);
+}
+
+.pg-required {
+  color: var(--color-destructive);
+}
+
+.pg-control,
+.pg-select,
+.pg-textarea {
+  width: 100%;
+  min-height: var(--control-height);
+  padding: 0 var(--control-padding-x);
+  border: 1px solid var(--color-border-strong);
+  border-radius: var(--radius-control);
+  background: var(--color-surface);
+  color: var(--color-text);
+  font: inherit;
+}
+
+.pg-textarea {
+  min-height: 4.5rem;
+  padding: var(--space-3) var(--control-padding-x);
+  resize: vertical;
+}
+
+.pg-control:focus-visible,
+.pg-select:focus-visible,
+.pg-textarea:focus-visible {
+  outline: var(--focus-ring);
+  outline-offset: var(--focus-offset);
+}
+
+.pg-control--error,
+.pg-select.pg-control--error,
+.pg-textarea.pg-control--error {
+  border-color: var(--color-destructive);
+}
+
+.pg-hint {
+  font-size: var(--font-size-caption);
+  color: var(--color-text-muted);
+}
+
+.pg-segmented {
+  display: inline-flex;
+  border: 1px solid var(--color-border-strong);
+  border-radius: var(--radius-control);
+  background: var(--color-surface);
+  overflow: hidden;
+}
+
+.pg-segmented__option {
+  display: inline-flex;
+  align-items: center;
+  min-height: var(--control-height);
+  padding: 0 var(--space-4);
+  font-weight: var(--font-weight-medium);
+  cursor: pointer;
+}
+
+.pg-segmented__option:has(input:focus-visible) {
+  outline: var(--focus-ring);
+  outline-offset: var(--focus-offset);
+}
+
+.pg-segmented__option:has(input:checked) {
+  background: rgb(0 119 190 / 10%);
+  color: var(--portal-navy);
+}
+
+.pg-segmented input {
+  position: absolute;
+  opacity: 0;
+  pointer-events: none;
+}
