@@ -34,7 +34,7 @@ describe('draftFromRule', () => {
     expect(source).toBeDefined();
     const draft = draftFromRule(source!);
     expect(draft.groupId).toBe('rg_trial_onboarding');
-    expect(draft.sequenceOrder).toBe(6);
+    expect(draft.sequenceOrder).toBe(3);
     expect(draft.category).toBe('conversion');
   });
 });

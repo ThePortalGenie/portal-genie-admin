@@ -149,15 +149,52 @@ describe('rule fixtures', () => {
     expect(trial.map((rule) => rule.name)).toEqual([
       'Welcome to Portal Genie',
       'Complete Your Setup',
-      'Add Your Company Logo',
-      'Create Your First Folder',
-      'Upload Your First Document',
       '7 Days Left in Your Trial',
       '3 Days Left in Your Trial',
       'Your Trial Ends Tomorrow',
       'Your Trial Ends Today',
       'Your Portal Genie Trial Has Expired',
     ]);
+  });
+
+  it('places Adoption rules in recommended product progression order', () => {
+    const adoption = RULE_FIXTURES.filter((rule) => rule.groupId === 'rg_adoption').sort(
+      (left, right) => left.sequenceOrder - right.sequenceOrder,
+    );
+    expect(adoption.map((rule) => rule.name)).toEqual([
+      'Add Your Company Logo',
+      'Create Your First Folder',
+      'Upload Your First Document',
+      'Take the Next Step With Portal Genie',
+    ]);
+  });
+
+  it('keeps logo, folder, and document in Adoption without changing their categories', () => {
+    expect(ruleById('rule_logo')).toMatchObject({
+      groupId: 'rg_adoption',
+      category: 'adoption',
+      sequenceOrder: 1,
+    });
+    expect(ruleById('rule_folder')).toMatchObject({
+      groupId: 'rg_adoption',
+      category: 'adoption',
+      sequenceOrder: 2,
+    });
+    expect(ruleById('rule_document')).toMatchObject({
+      groupId: 'rg_adoption',
+      category: 'adoption',
+      sequenceOrder: 3,
+    });
+    expect(ruleById('rule_setup')).toMatchObject({
+      groupId: 'rg_trial_onboarding',
+      category: 'onboarding',
+      sequenceOrder: 2,
+    });
+    expect(ruleById('rule_trial_7')).toMatchObject({
+      groupId: 'rg_trial_onboarding',
+      category: 'conversion',
+      sequenceOrder: 3,
+    });
   });
 
   it('places Engagement rules in display sequence, including the disabled 60-day rule', () => {

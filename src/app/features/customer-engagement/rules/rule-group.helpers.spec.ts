@@ -25,20 +25,26 @@ describe('rule group organisation', () => {
   it('counts rules per group from the assigned set', () => {
     const overviews = groupOverviews(RULE_GROUP_FIXTURES, RULE_FIXTURES);
     const trial = overviews.find((item) => item.group.id === 'rg_trial_onboarding');
-    expect(trial).toMatchObject({ total: 10, active: 10, disabled: 0 });
+    expect(trial).toMatchObject({ total: 7, active: 7, disabled: 0 });
     expect(trial?.journeySpan).toBe('Registration → Trial expiry');
 
     const engagement = overviews.find((item) => item.group.id === 'rg_engagement');
     expect(engagement).toMatchObject({ total: 4, active: 3, disabled: 1 });
+
+    const adoption = overviews.find((item) => item.group.id === 'rg_adoption');
+    expect(adoption).toMatchObject({ total: 4, active: 3, disabled: 1 });
   });
 
   it('filters to a group without using category', () => {
     const adoption = rulesForGroup(RULE_FIXTURES, 'rg_adoption');
     expect(adoption.map((rule) => rule.name)).toEqual([
+      'Add Your Company Logo',
+      'Create Your First Folder',
+      'Upload Your First Document',
       'Take the Next Step With Portal Genie',
     ]);
     expect(adoption.every((rule) => rule.category === 'adoption')).toBe(true);
-    expect(RULE_FIXTURES.find((rule) => rule.id === 'rule_logo')?.groupId).toBe(
+    expect(RULE_FIXTURES.find((rule) => rule.id === 'rule_setup')?.groupId).toBe(
       'rg_trial_onboarding',
     );
   });
@@ -48,17 +54,14 @@ describe('rule group organisation', () => {
     expect(trial.map((rule) => rule.name)).toEqual([
       'Welcome to Portal Genie',
       'Complete Your Setup',
-      'Add Your Company Logo',
-      'Create Your First Folder',
-      'Upload Your First Document',
       '7 Days Left in Your Trial',
       '3 Days Left in Your Trial',
       'Your Trial Ends Tomorrow',
       'Your Trial Ends Today',
       'Your Portal Genie Trial Has Expired',
     ]);
-    expect(trial[9]?.status).toBe('active');
-    expect(trial[9]?.sequenceOrder).toBe(10);
+    expect(trial[6]?.status).toBe('active');
+    expect(trial[6]?.sequenceOrder).toBe(7);
   });
 
   it('keeps a disabled engagement rule in its sequence position', () => {
@@ -74,7 +77,7 @@ describe('rule group organisation', () => {
   });
 
   it('places a new rule after the current last sequence in that group', () => {
-    expect(nextSequenceOrder(RULE_FIXTURES, 'rg_trial_onboarding')).toBe(11);
+    expect(nextSequenceOrder(RULE_FIXTURES, 'rg_trial_onboarding')).toBe(8);
     expect(nextSequenceOrder(RULE_FIXTURES, 'rg_announcements')).toBe(3);
   });
 

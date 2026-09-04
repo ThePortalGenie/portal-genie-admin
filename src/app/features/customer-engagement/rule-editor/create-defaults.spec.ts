@@ -22,7 +22,7 @@ describe('draftForCreate', () => {
       rules: RULE_FIXTURES,
     });
     expect(draft.groupId).toBe('rg_trial_onboarding');
-    expect(draft.sequenceOrder).toBe(11);
+    expect(draft.sequenceOrder).toBe(8);
   });
 
   it('ignores an unknown group id from the route', () => {
