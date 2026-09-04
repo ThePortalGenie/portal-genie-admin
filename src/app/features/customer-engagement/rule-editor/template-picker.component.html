@@ -1,22 +1,55 @@
 <div class="template-picker">
+  @if (selected(); as template) {
+    <article class="template-selected" aria-label="Selected communication">
+      <div class="template-selected__copy">
+        <p class="template-selected__name">{{ template.name }}</p>
+        <p class="template-selected__meta">{{ categoryLabels[template.category] }}</p>
+        <p class="template-selected__purpose">{{ template.purpose }}</p>
+      </div>
+      <ui-button variant="secondary" size="compact" (click)="openLibrary()">
+        Change communication
+      </ui-button>
+    </article>
+  } @else {
+    <div class="template-empty">
+      <p class="template-empty__title">No communication selected.</p>
+      <ui-button (click)="openLibrary()">Choose communication</ui-button>
+    </div>
+  }
+
+  @if (issue(); as item) {
+    <ui-validation-message [message]="item.message" />
+  }
+</div>
+
+<dialog
+  #libraryEl
+  class="template-library"
+  aria-labelledby="template-library-title"
+  (close)="onLibraryClose()"
+>
+  <div class="template-library__header">
+    <h2 id="template-library-title">Choose a communication</h2>
+    <p class="pg-hint">Templates are read-only. Select one to use in this rule.</p>
+  </div>
+
   <div class="pg-field">
-    <label class="pg-label" for="template-search">Find a template</label>
+    <label class="pg-label" for="template-search">Search</label>
     <input
+      #searchEl
       class="pg-control"
       id="template-search"
       type="search"
       autocomplete="off"
       [value]="query()"
       (input)="onQueryInput($event)"
-      placeholder="Search by name or purpose"
     />
   </div>
 
   <div
-    class="template-picker__list"
+    class="template-library__list"
     role="radiogroup"
-    aria-label="Communication template"
-    [attr.aria-invalid]="!!issue()"
+    aria-label="Communication templates"
   >
     @for (group of groups(); track group.category) {
       <section class="template-group">
@@ -24,37 +57,29 @@
         @for (template of group.templates; track template.id) {
           <label
             class="template-option"
-            [class.template-option--selected]="control().value === template.id"
+            [class.template-option--selected]="pendingId() === template.id"
           >
-            <input type="radio" [formControl]="control()" [value]="template.id" />
+            <input
+              type="radio"
+              name="template-library-choice"
+              [value]="template.id"
+              [checked]="pendingId() === template.id"
+              (change)="selectPending(template.id)"
+            />
             <span class="template-option__body">
               <span class="template-option__name">{{ template.name }}</span>
-              @if (control().value === template.id) {
-                <span class="template-option__state">Selected</span>
-              }
-              <span class="template-option__meta">{{ template.lifecycleStage }}</span>
               <span class="template-option__purpose">{{ template.purpose }}</span>
             </span>
           </label>
         }
       </section>
     } @empty {
-      <p class="pg-hint">No templates match this search.</p>
+      <p class="pg-hint">No communications match this search.</p>
     }
   </div>
 
-  @if (issue(); as item) {
-    <ui-validation-message [message]="item.message" />
-  }
-
-  @if (selected(); as template) {
-    <aside class="selected-card" aria-label="Selected communication">
-      <p class="selected-card__kicker">Selected communication</p>
-      <p class="selected-card__name">{{ template.name }}</p>
-      <p class="selected-card__meta">
-        {{ categoryLabels[template.category] }} · {{ template.lifecycleStage }}
-      </p>
-      <p>{{ template.purpose }}</p>
-    </aside>
-  }
-</div>
+  <div class="template-library__actions">
+    <ui-button variant="secondary" (click)="dismiss()">Cancel</ui-button>
+    <ui-button [disabled]="!pendingId()" (click)="confirm()">Use this communication</ui-button>
+  </div>
+</dialog>

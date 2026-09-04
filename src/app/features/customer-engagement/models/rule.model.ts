@@ -36,6 +36,13 @@ export type Rule = {
   name: string;
   description: string;
   category: RuleCategory;
+  /** Opaque Rule Group id. Organises the rule in a journey; does not affect execution. */
+  groupId: string;
+  /**
+   * Display position within the rule’s group.
+   * Administrative ordering only — not send sequence or dependency.
+   */
+  sequenceOrder: number;
   status: RuleStatus;
   rootGroup: RuleConditionGroup;
   templateId: string;
@@ -62,6 +69,8 @@ export type RuleDraft = {
   name: string;
   description: string;
   category: RuleCategory | '';
+  groupId: string;
+  sequenceOrder: number | null;
   status: RuleStatus;
   rootGroup: RuleConditionGroupDraft;
   templateId: string;

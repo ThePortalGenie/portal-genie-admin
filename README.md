@@ -6,7 +6,7 @@ Frontend-only Angular app. APIs, databases, authentication, and email delivery w
 
 ## Current implementation status
 
-**Phase 4 — Rule Builder.** Administrators can create and edit engagement rules at `/engagement/rules/new` and `/engagement/rules/:id`. The editor defines who qualifies (one condition group), when the communication should become eligible, and which system template to send. Data remains mock-backed. Create defaults to **Disabled**.
+**Phase 4B — Rule groups.** The Rules landing page presents journeys (Trial & Onboarding, Adoption, Engagement, Announcements). `/engagement/rules/group/:groupId` shows a display sequence. `groupId` and `sequenceOrder` are organisational metadata only; they do not control evaluation or send order.
 
 Still not built: template library UI, Customer Usage, Settings, HTTP APIs, authentication, email delivery, nested condition-group UI, recipient preview.
 
@@ -54,8 +54,9 @@ This runs `tsc -p tsconfig.typecheck.json --noEmit`. Application `tsconfig` file
 | Path | Page |
 | --- | --- |
 | `/` | Redirect to `/engagement/rules` |
-| `/engagement/rules` | Rules list (mock data) |
-| `/engagement/rules/new` | Create Rule |
+| `/engagement/rules` | Rules landing: group cards + all-rules table |
+| `/engagement/rules/group/:groupId` | Rule group journey (display sequence) |
+| `/engagement/rules/new` | Create Rule (`?group=` preselects a group) |
 | `/engagement/rules/:id` | Edit Rule (loads the mock rule; unknown ids show not found) |
 | `/engagement/templates` | Communication Templates placeholder |
 | any other path | Page not found (inside the shell) |

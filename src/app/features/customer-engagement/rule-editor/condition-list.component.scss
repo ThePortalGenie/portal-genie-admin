@@ -3,25 +3,52 @@
 }
 
 .combinator {
-  max-width: 20rem;
+  max-width: 22rem;
   margin-bottom: var(--space-4);
 }
 
-.condition-list__rows {
+.when-stack {
   display: flex;
   flex-direction: column;
-  gap: var(--space-4);
   margin: 0 0 var(--space-4);
   padding: 0;
   list-style: none;
 }
 
-.condition-list__rows li {
-  padding-bottom: var(--space-4);
-  border-bottom: 1px solid var(--color-border);
+.when-card {
+  padding: var(--space-4);
+  border: 1px solid var(--color-border);
+  border-radius: var(--radius-card);
+  background: var(--color-surface);
 }
 
-.condition-list__rows li:last-child {
-  border-bottom: 0;
-  padding-bottom: 0;
+.when-card__lead {
+  margin: 0 0 var(--space-3);
+  color: var(--color-text-muted);
+  font-weight: var(--font-weight-medium);
+}
+
+.when-join {
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  gap: var(--space-3);
+  margin: var(--space-3) 0;
+  color: var(--portal-steel);
+  font-size: var(--font-size-caption);
+  font-weight: var(--font-weight-semibold);
+}
+
+.when-join::before,
+.when-join::after {
+  content: '';
+  flex: 1;
+  max-width: 5rem;
+  height: 1px;
+  background: var(--color-border);
+}
+
+.when-join span {
+  min-width: 2.5rem;
+  text-align: center;
 }

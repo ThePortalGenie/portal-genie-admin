@@ -49,6 +49,61 @@ export function summariseConditionLine(
   );
 }
 
+export type JourneyItemSummary = {
+  timing: string;
+  eligibility: string;
+};
+
+/**
+ * Presentation for a rule in a group journey. Timing is display copy only.
+ */
+export function summariseJourneyItem(
+  rule: Rule,
+  metrics: readonly CustomerMetric[],
+): JourneyItemSummary {
+  const metricByKey = new Map(metrics.map((metric) => [metric.key, metric]));
+  const timing = summariseJourneyTiming(rule);
+  const eligibility = summariseGroup(rule.rootGroup, metricByKey, rule.timing);
+
+  if (rule.timing.mode === 'on_match' && hasInactivityCondition(rule)) {
+    return { timing, eligibility: '' };
+  }
+
+  return { timing, eligibility };
+}
+
+export function summariseJourneyTiming(rule: Rule): string {
+  if (rule.timing.mode !== 'on_match') {
+    return summariseTiming(rule.timing) || 'Timing not set yet';
+  }
+
+  const inactivityDays = inactivityThresholdDays(rule);
+  if (inactivityDays !== null) {
+    return inactivityDays === 1
+      ? 'When inactive for 1 day'
+      : `When inactive for ${inactivityDays} days`;
+  }
+
+  return 'When the conditions become true';
+}
+
+function hasInactivityCondition(rule: Rule): boolean {
+  return inactivityThresholdDays(rule) !== null;
+}
+
+function inactivityThresholdDays(rule: Rule): number | null {
+  for (const child of rule.rootGroup.children) {
+    if (isRuleConditionGroup(child)) {
+      continue;
+    }
+    if (child.metricKey !== 'daysSinceLastPortalSignIn' || !isAtLeastOperator(child.operator)) {
+      continue;
+    }
+    return numericValue(child.value);
+  }
+  return null;
+}
+
 export function summariseTiming(timing: RuleTiming): string {
   if (timing.mode === 'on_match') {
     return '';

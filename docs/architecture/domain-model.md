@@ -71,6 +71,28 @@ There is no stored `draft` status. Unsaved work exists only in the editor.
 
 Adding a category later is a catalog change, same pattern as metrics. Keys may coincide with template category keys (for example `onboarding`); they are **different types** and must not be mixed.
 
+### RuleGroup
+
+**Separate from `RuleCategory`.** A Rule Group is a customer communication journey / collection used for navigation and administrative ordering. It is mock catalog data until a backend owns it.
+
+| Key | Label |
+| --- | --- |
+| `rg_trial_onboarding` | Trial & Onboarding |
+| `rg_adoption` | Adoption |
+| `rg_engagement` | Engagement |
+| `rg_announcements` | Announcements |
+
+Category describes **what type** of rule it is. Rule Group describes **which journey** it belongs to. Example: “7 Days Left in Your Trial” has category Conversion and group Trial & Onboarding.
+
+| Field | Meaning |
+| --- | --- |
+| `id` | Opaque |
+| `name` | Administrator label |
+| `description` | Short journey description |
+| `displayOrder` | Order of group cards on the Rules landing page |
+
+`sequenceOrder` on a **Rule** is the position of that rule inside its group. It is **organisational metadata only**. It does not create a dependency, gate execution, or mean “send rule 2 only after rule 1”. Eligibility and `RuleTiming` continue to determine when a communication can become eligible. Announcement groups may have no chronological lifecycle; they still use explicit display order.
+
 ### CommunicationCategory
 
 | Key | Label |
@@ -195,6 +217,8 @@ No subject, HTML body, or provider id in v1. Those belong to a future delivery c
 | `trial-expiry-reminder` | Trial expiry reminder | `trial_reminder` | Trial ending soon |
 | `trial-expired` | Trial expired | `trial_expiry` | Trial end date passed |
 | `feature-announcement` | Feature announcement | `announcement` | Any eligible segment |
+| `product-update` | Product update | `announcement` | Any eligible segment |
+| `long-term-reengagement` | Long-term re-engagement | `inactivity` | Quiet for two months or more |
 | `product-adoption` | Product adoption | `announcement` | Usage threshold |
 | `customer-milestone` | Customer milestone | `milestone` | Anniversary or count milestone |
 
@@ -211,7 +235,9 @@ Persisted (or mock-persisted) engagement rule.
 | `id` | Opaque |
 | `name` | Required |
 | `description` | Optional |
-| `category` | Required `RuleCategory` (not a template category) |
+| `category` | Required `RuleCategory` (not a template category, not a rule group) |
+| `groupId` | Required opaque Rule Group id |
+| `sequenceOrder` | Integer ≥ 1. Display position within the group only — not execution order |
 | `status` | `RuleStatus` |
 | `rootGroup` | `RuleConditionGroup` |
 | `templateId` | Communication template id |
@@ -261,6 +287,7 @@ Not stored. Derived from `RuleDraft` + catalogs for the list column and the edit
 | `CustomerMetric`, `MetricType`, `MetricOperator`, `MetricCategory` | Shared domain (`core/domain`) — Usage will reuse |
 | Trial/account **enum values** | Centralised with the metric catalog (temporary mock contract). Not copied into components |
 | `RuleCategory` | Centralised catalog in shared or engagement domain |
+| `RuleGroup` | Centralised mock catalog in shared domain; organisational journey, not a category |
 | `CommunicationTemplate`, `CommunicationCategory` | Shared domain — catalog is a system resource |
 | `Rule`, `RuleCondition`, `RuleConditionGroup`, `RuleTiming`, `RuleStatus`, `ValidationResult` | Customer Engagement feature models |
 

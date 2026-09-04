@@ -1,54 +1,18 @@
-<aside class="summary-card">
-  <h2>Rule summary</h2>
-  <p class="pg-hint">A plain-language reading of this definition. It does not count customers.</p>
+<section class="rule-preview" aria-labelledby="rule-preview-heading" aria-live="polite">
+  <h2 id="rule-preview-heading">This rule will…</h2>
 
-  <section>
-    <h3>Who</h3>
-    @if (summary().whoLines.length === 1) {
-      <p>{{ summary().whoLines[0] }}</p>
-    } @else {
-      <ul>
-        @for (line of summary().whoLines; track $index) {
-          <li>
-            @if ($index > 0) {
-              <span class="joiner">{{ summary().combinator === 'or' ? 'OR' : 'AND' }}</span>
-            }
-            {{ line }}
-          </li>
+  @if (preview().isReadable) {
+    <p class="rule-preview__body">
+      @for (line of preview().lines; track $index; let last = $last) {
+        <span>{{ line }}{{ last ? '' : ',' }}</span>
+        @if (!last) {
+          <br />
         }
-      </ul>
-    }
-  </section>
-
-  <section>
-    <h3>When</h3>
-    <p>{{ summary().whenText }}</p>
-  </section>
-
-  <section>
-    <h3>What</h3>
-    <p>{{ summary().whatText }}</p>
-  </section>
-
-  @if (!showIssueList() && errors().length > 0) {
-    <p class="summary-card__status">This rule is incomplete. Save is unavailable until required fields are complete.</p>
-  }
-
-  @if (showIssueList() && errors().length > 0) {
-    <section>
-      <h3>Needs attention</h3>
-      @for (item of errors(); track item.code + item.path) {
-        <ui-validation-message [message]="item.message" />
       }
-    </section>
+    </p>
   }
 
-  @if (warnings().length > 0) {
-    <section>
-      <h3>Warnings</h3>
-      @for (item of warnings(); track item.code + item.path) {
-        <ui-validation-message [message]="item.message" tone="warning" />
-      }
-    </section>
+  @if (preview().guidance; as guidance) {
+    <p class="rule-preview__guidance">{{ guidance }}</p>
   }
-</aside>
+</section>

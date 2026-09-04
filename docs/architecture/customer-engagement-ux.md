@@ -19,29 +19,55 @@ Copy is sentence case. Status is a **badge with a label**, never colour alone.
 
 ---
 
-# A. Rules list
+# A. Rules landing
 
 **Route:** `/engagement/rules`  
 **Title:** Rules  
 **Description:** Create automated communications based on customer lifecycle and usage.  
 **Primary action:** Create rule → `/engagement/rules/new`
 
+The landing page is organised around **Rule Groups** (journeys). The flat table remains as **All rules** so administrators can still search and filter globally.
+
 ### Page structure (top to bottom)
 
 1. Page header
-2. Toolbar: search + filters
-3. Table (or empty / loading / error in the same slot)
-4. Pagination if the mock/API list is long enough to need it (show when count > 25)
+2. Overview counts (total / active / disabled for the full loaded set)
+3. Global search (name, description, template — all rules, all groups)
+4. Rule group cards
+5. All rules: status + category filters and the existing table
 
-### Toolbar
+### Rule group cards
+
+Each card is a journey, not a category filter. Counts are derived from assigned rules only (total / active / disabled). Do not show emails sent, customers, or open rates.
+
+**View rules** → `/engagement/rules/group/:groupId`
+
+### Toolbar (All rules)
 
 | Control | Behaviour |
 | --- | --- |
-| Search | Filters by rule name (and template name). Debounced. Placeholder is a hint; the field has a visible “Search” label or `aria-label` |
+| Search | Global. Filters All rules by rule name, description, and template name. Debounced. Placeholder is a hint; the field has a visible “Search” label or `aria-label` |
 | Status | All / Active / Disabled |
-| Category | All + **rule** categories (Onboarding, Adoption, Engagement, Conversion, Announcement, Other). Not template categories. |
+| Category | All + **rule** categories (Onboarding, Adoption, Engagement, Conversion, Announcement, Other). Not template categories. Not rule groups. |
 
 Filters combine with AND. No saved views in v1.
+
+# A2. Rule group journey
+
+**Route:** `/engagement/rules/group/:groupId`  
+**Title:** Group name  
+**Description:** Group description  
+**Primary action:** Create rule → `/engagement/rules/new?group=:groupId` (preselects that group)
+
+Breadcrumb: Customer Engagement / Rules / {group name}
+
+Show rules as a restrained vertical **sequence**, sorted by `sequenceOrder`. Disabled rules stay in their stored position. This is a readable journey, not a workflow canvas: no drag-and-drop, no arrows between conditions.
+
+Each item shows name, timing (from existing summary logic), important eligibility, template, status, and category. Edit is available; Duplicate / Enable / Disable / Delete sit in an overflow menu.
+
+Helper copy: order in this list is for administrators. Eligibility and timing on each rule still decide when a communication can send.
+
+Group search, if shown, searches only within that group.
 
 ### Columns
 
@@ -136,7 +162,9 @@ The summary is not a recipient preview. It is a sentence restating the current d
 | --- | --- | --- |
 | Name | Yes | Text |
 | Description | No | Textarea, 2–3 rows |
-| Category | Yes | Select: **rule** categories (Onboarding, Adoption, Engagement, Conversion, Announcement, Other). Not template categories. No “None”. |
+| Category | Yes | Select: **rule** categories (Onboarding, Adoption, Engagement, Conversion, Announcement, Other). Not template categories. Not rule groups. Help: “Describes the purpose of this rule.” No “None”. |
+| Rule group | Yes | Select: Trial & Onboarding, Adoption, Engagement, Announcements. Help: “Organises related rules into a customer journey.” Preselected when Create is launched from a group page. |
+| Position in group | Yes | Integer ≥ 1. Display order only. Defaults to the end of the selected group on create. Does not control send order. |
 | Status | Yes | Segmented control or select: Disabled / Active |
 
 New rules default to **Disabled** so an incomplete thought is not activated by accident. Administrators set Active before save when the rule is valid.

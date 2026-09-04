@@ -2,19 +2,26 @@
   <div class="pg-field combinator">
     <label class="pg-label" for="condition-combinator">Match</label>
     <select class="pg-select" id="condition-combinator" [formControl]="combinator()">
-      <option value="and">All conditions</option>
-      <option value="or">Any condition</option>
+      <option value="and">All of these conditions</option>
+      <option value="or">Any of these conditions</option>
     </select>
-    <p class="pg-hint">Who should this apply to? Timing is set separately below.</p>
   </div>
 
   @if (groupIssue(); as issue) {
     <ui-validation-message [message]="issue.message" />
   }
 
-  <ul class="condition-list__rows">
+  <ul class="when-stack">
     @for (condition of conditions().controls; track condition.controls.id.value; let index = $index) {
-      <li>
+      @if (index > 0) {
+        <li class="when-join">
+          <span>{{ joinLabel(index) }}</span>
+        </li>
+      }
+      <li class="when-card">
+        @if (index === 0) {
+          <p class="when-card__lead">A customer</p>
+        }
         <app-condition-row
           [group]="condition"
           [metrics]="metrics()"
@@ -26,5 +33,5 @@
     }
   </ul>
 
-  <ui-button variant="secondary" (click)="add.emit()">Add condition</ui-button>
+  <ui-button variant="secondary" (click)="add.emit()">+ Add another condition</ui-button>
 </div>

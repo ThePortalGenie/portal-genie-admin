@@ -1,7 +1,6 @@
-import { ChangeDetectionStrategy, Component, computed, input, output } from '@angular/core';
+import { ChangeDetectionStrategy, Component, input, output } from '@angular/core';
 import { ReactiveFormsModule } from '@angular/forms';
-import { METRIC_OPERATOR_LABELS } from '../../../core/domain/metric-operators';
-import { CustomerMetric } from '../../../core/domain/metric.types';
+import { CustomerMetric, TimingDirection } from '../../../core/domain/metric.types';
 import { ValidationMessage } from '../../../shared/ui/validation-message/validation-message.component';
 import { ValidationIssue } from '../models/validation.model';
 import {
@@ -12,6 +11,11 @@ import {
   operatorFromBooleanChoice,
 } from './condition-draft.helpers';
 import { ConditionFormGroup } from './condition-form';
+import {
+  defaultLifecycleDirection,
+  isLifecycleTimingMetric,
+} from './lifecycle-authoring';
+import { booleanValueLabels, EDITOR_OPERATOR_LABELS, metricEditorLabel } from './metric-display';
 
 @Component({
   selector: 'app-condition-row',
@@ -27,33 +31,81 @@ export class ConditionRow {
   readonly showErrors = input(false);
   readonly remove = output<void>();
 
-  protected readonly operatorLabels = METRIC_OPERATOR_LABELS;
-  protected readonly groupedMetrics = computed(() => groupMetricsByCategory(this.metrics()));
+  protected readonly operatorLabels = EDITOR_OPERATOR_LABELS;
+  protected readonly groupedMetrics = () => groupMetricsByCategory(this.metrics());
 
-  protected readonly metric = computed(() => {
+  protected selectedMetric(): CustomerMetric | undefined {
     const key = this.group().controls.metricKey.value;
     return this.metrics().find((item) => item.key === key);
-  });
+  }
 
-  protected readonly fieldId = computed(() => this.group().controls.id.value);
+  protected isLifecycle(): boolean {
+    return isLifecycleTimingMetric(this.selectedMetric());
+  }
+
+  protected lifecycleDirections(): TimingDirection[] {
+    return [...(this.selectedMetric()?.timingDirections ?? [])];
+  }
+
+  protected fieldId(): string {
+    return this.group().controls.id.value;
+  }
+
+  protected metricLabel(metric: CustomerMetric): string {
+    return metricEditorLabel(metric);
+  }
+
+  protected booleanLabels(): { yes: string; no: string } {
+    return booleanValueLabels(this.group().controls.metricKey.value);
+  }
 
   protected showIssue(suffix: string): ValidationIssue | undefined {
+    const issue = this.issues().find((item) => item.path.endsWith(suffix));
+    if (!issue) {
+      return undefined;
+    }
+    if (issue.severity === 'warning') {
+      return issue;
+    }
     if (!this.showErrors() && !this.isTouched(suffix)) {
       return undefined;
     }
-    return this.issues().find((issue) => issue.path.endsWith(suffix));
+    return issue;
   }
 
   protected onMetricChange(): void {
     const current = this.group().getRawValue();
     const metric = this.metrics().find((item) => item.key === current.metricKey);
-    const next = applyMetricChange(current, metric);
-    this.group().patchValue(next);
+    const next = applyMetricChange(
+      {
+        id: current.id,
+        metricKey: current.metricKey,
+        operator: current.operator,
+        value: current.value,
+      },
+      metric,
+    );
+    this.group().patchValue({
+      ...next,
+      offsetDays: isLifecycleTimingMetric(metric) ? 0 : null,
+      timingDirection: isLifecycleTimingMetric(metric)
+        ? defaultLifecycleDirection(metric)
+        : '',
+    });
   }
 
   protected onOperatorChange(): void {
     const current = this.group().getRawValue();
-    const next = applyOperatorChange(current, this.metric(), current.operator);
+    const next = applyOperatorChange(
+      {
+        id: current.id,
+        metricKey: current.metricKey,
+        operator: current.operator,
+        value: current.value,
+      },
+      this.selectedMetric(),
+      current.operator,
+    );
     this.group().patchValue(next);
   }
 
@@ -69,6 +121,17 @@ export class ConditionRow {
   protected onNumberChange(event: Event): void {
     const raw = (event.target as HTMLInputElement).value;
     this.group().controls.value.setValue(raw === '' ? null : Number(raw));
+  }
+
+  protected onOffsetChange(event: Event): void {
+    const raw = (event.target as HTMLInputElement).value;
+    this.group().controls.offsetDays.setValue(raw === '' ? null : Number(raw));
+    this.group().controls.offsetDays.markAsTouched();
+  }
+
+  protected offsetValue(): string {
+    const value = this.group().controls.offsetDays.value;
+    return typeof value === 'number' && Number.isFinite(value) ? String(value) : '';
   }
 
   protected onRangeChange(part: 'min' | 'max', event: Event): void {
@@ -118,8 +181,11 @@ export class ConditionRow {
     if (suffix === 'metricKey') {
       return this.group().controls.metricKey.touched;
     }
-    if (suffix === 'operator') {
-      return this.group().controls.operator.touched;
+    if (suffix === 'operator' || suffix === 'timingDirection') {
+      return this.group().controls.operator.touched || this.group().controls.timingDirection.touched;
+    }
+    if (suffix === 'offsetDays') {
+      return this.group().controls.offsetDays.touched;
     }
     return this.group().controls.value.touched || this.group().controls.operator.touched;
   }

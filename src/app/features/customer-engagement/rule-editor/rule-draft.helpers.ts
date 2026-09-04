@@ -24,6 +24,8 @@ export function emptyRuleDraft(): RuleDraft {
     name: '',
     description: '',
     category: '',
+    groupId: '',
+    sequenceOrder: null,
     status: 'disabled',
     rootGroup: {
       id: newConditionId(),
@@ -40,6 +42,8 @@ export function draftFromRule(rule: Rule): RuleDraft {
     name: rule.name,
     description: rule.description,
     category: rule.category,
+    groupId: rule.groupId,
+    sequenceOrder: rule.sequenceOrder,
     status: rule.status,
     rootGroup: {
       id: rule.rootGroup.id,
@@ -58,12 +62,20 @@ export function ruleFromDraft(
   if (draft.category === '') {
     throw new Error('Cannot persist a rule without a category');
   }
+  if (!draft.groupId) {
+    throw new Error('Cannot persist a rule without a rule group');
+  }
+  if (draft.sequenceOrder === null || draft.sequenceOrder < 1) {
+    throw new Error('Cannot persist a rule without a sequence position');
+  }
 
   return {
     id: identity.id,
     name: draft.name.trim(),
     description: draft.description.trim(),
     category: draft.category,
+    groupId: draft.groupId,
+    sequenceOrder: draft.sequenceOrder,
     status: draft.status,
     rootGroup: {
       id: draft.rootGroup.id,
@@ -129,6 +141,8 @@ function stableDraft(draft: RuleDraft): string {
     name: draft.name,
     description: draft.description,
     category: draft.category,
+    groupId: draft.groupId,
+    sequenceOrder: draft.sequenceOrder,
     status: draft.status,
     combinator: draft.rootGroup.combinator,
     conditions: draft.rootGroup.children.map((child) => ({

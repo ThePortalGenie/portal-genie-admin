@@ -1,0 +1,107 @@
+<app-page-header
+  [title]="group()?.name ?? 'Rule group'"
+  [description]="group()?.description ?? ''"
+  [breadcrumbs]="breadcrumbs()"
+>
+  @if (loadState() === 'loaded') {
+    <ui-button (click)="createRule()">Create Rule</ui-button>
+  }
+</app-page-header>
+
+@switch (loadState()) {
+  @case ('loading') {
+    <p class="group-status" aria-live="polite" aria-busy="true">Loading rule group…</p>
+  }
+  @case ('error') {
+    <ui-error-state
+      title="This rule group could not be loaded"
+      message="Try again. If the problem continues, return to Rules."
+      (retry)="load()"
+    />
+  }
+  @case ('not-found') {
+    <ui-empty-state
+      title="This rule group does not exist"
+      message="It may have been removed, or the address is incorrect."
+    >
+      <ui-button variant="secondary" (click)="backToRules()">Back to Rules</ui-button>
+    </ui-empty-state>
+  }
+  @default {
+    <p class="group-note">
+      Order in this list is for administrators. Eligibility and timing on each rule still decide
+      when a communication can send.
+    </p>
+
+    <div class="toolbar">
+      <ui-search-field
+        class="toolbar__search"
+        label="Search this group"
+        placeholder="Search by name, description, or template"
+        [value]="query()"
+        (valueChange)="query.set($event)"
+      />
+    </div>
+
+    @if (groupRules().length === 0) {
+      <ui-empty-state
+        title="No rules in this group yet"
+        message="Create a rule to add the first communication in this customer journey."
+      >
+        <ui-button (click)="createRule()">Create Rule</ui-button>
+      </ui-empty-state>
+    } @else if (rows().length === 0) {
+      <ui-empty-state
+        title="No rules match this search"
+        message="Try a different search term, or clear it to see the full journey."
+      >
+        <ui-button variant="secondary" (click)="query.set('')">Clear search</ui-button>
+      </ui-empty-state>
+    } @else {
+      <ol class="journey" aria-label="Communication sequence">
+        @for (row of rows(); track row.rule.id; let last = $last) {
+          <li class="journey__item" [class.journey__item--last]="last">
+            <div class="journey__index" aria-hidden="true">{{ row.indexLabel }}</div>
+            <div class="journey__rail" aria-hidden="true">
+              <span class="journey__dot"></span>
+              @if (!last) {
+                <span class="journey__line"></span>
+              }
+            </div>
+            <article class="journey__card">
+              <header class="journey__header">
+                <h2 class="journey__title">
+                  <a
+                    class="journey__name"
+                    [routerLink]="['/engagement/rules', row.rule.id]"
+                    [queryParams]="{ fromGroup: group()?.id }"
+                  >
+                    {{ row.rule.name }}
+                  </a>
+                </h2>
+                <ui-status-badge [status]="row.rule.status" />
+                <app-rule-actions-menu
+                  [rule]="row.rule"
+                  [pending]="pendingRuleId() === row.rule.id"
+                  [showEdit]="true"
+                  (edit)="editRule($event)"
+                  (duplicate)="duplicate($event)"
+                  (toggleStatus)="toggleStatus($event)"
+                  (remove)="deleteRule($event)"
+                />
+              </header>
+              <p class="journey__timing">{{ row.timing }}</p>
+              @if (row.eligibility) {
+                <p class="journey__meta">{{ row.eligibility }}</p>
+              }
+              <p class="journey__meta">Send {{ row.templateName }}</p>
+              <p class="journey__meta">Category: {{ row.categoryLabel }}</p>
+            </article>
+          </li>
+        }
+      </ol>
+    }
+  }
+}
+
+<ui-confirm-dialog />

@@ -1,0 +1,57 @@
+import { CustomerMetric, MetricOperator } from '../../../core/domain/metric.types';
+
+/** Administrator-facing metric names in the editor. Catalog keys are unchanged. */
+const METRIC_EDITOR_LABELS: Record<string, string> = {
+  registeredAt: 'Registration',
+  daysSinceRegistration: 'Days since registration',
+  trialStatus: 'Trial status',
+  trialExpiresAt: 'Trial expiry',
+  daysUntilTrialExpiry: 'Days until trial expiry',
+  accountStatus: 'Account status',
+  logoUploaded: 'Company logo',
+  lastPortalSignInAt: 'Portal sign-in',
+  daysSinceLastPortalSignIn: 'Days since last portal sign-in',
+  portalSignInCount: 'Portal sign-in count',
+  folderCount: 'Folder count',
+  hasCreatedFolder: 'Folder',
+  documentCount: 'Document count',
+  hasUploadedDocument: 'Document',
+};
+
+const BOOLEAN_VALUE_LABELS: Record<string, { yes: string; no: string }> = {
+  logoUploaded: { yes: 'has been uploaded', no: 'has not been uploaded' },
+  hasCreatedFolder: { yes: 'has been created', no: 'has not been created' },
+  hasUploadedDocument: { yes: 'has been uploaded', no: 'has not been uploaded' },
+};
+
+export const EDITOR_OPERATOR_LABELS: Record<MetricOperator, string> = {
+  is_true: 'is yes',
+  is_false: 'is no',
+  is: 'is',
+  is_not: 'is not',
+  eq: 'equals',
+  gt: 'is greater than',
+  gte: 'is greater than or equal to',
+  lt: 'is less than',
+  lte: 'is less than or equal to',
+  between: 'is between',
+  is_empty: 'has not happened',
+};
+
+export function metricEditorLabel(metric: CustomerMetric): string {
+  return METRIC_EDITOR_LABELS[metric.key] ?? metric.displayName;
+}
+
+export function booleanValueLabels(metricKey: string): { yes: string; no: string } {
+  return BOOLEAN_VALUE_LABELS[metricKey] ?? { yes: 'Yes', no: 'No' };
+}
+
+export function timingAnchorLabel(metric: CustomerMetric): string {
+  if (metric.key === 'registeredAt') {
+    return 'Registration date';
+  }
+  if (metric.key === 'trialExpiresAt') {
+    return 'Trial expiry';
+  }
+  return metric.displayName;
+}

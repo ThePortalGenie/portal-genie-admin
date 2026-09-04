@@ -1,0 +1,46 @@
+<div class="rule-actions">
+  @if (showEdit()) {
+    <ui-button
+      variant="ghost"
+      size="compact"
+      [ariaLabel]="'Edit ' + rule().name"
+      [disabled]="pending()"
+      (click)="edit.emit(rule())"
+    >
+      Edit
+    </ui-button>
+  }
+
+  <details class="overflow">
+    <summary class="overflow__summary" [attr.aria-label]="'More actions for ' + rule().name">
+      More
+    </summary>
+    <div class="overflow__menu" role="menu">
+      <button
+        type="button"
+        role="menuitem"
+        [disabled]="pending()"
+        (click)="duplicate.emit(rule())"
+      >
+        Duplicate
+      </button>
+      <button
+        type="button"
+        role="menuitem"
+        [disabled]="pending()"
+        (click)="toggleStatus.emit(rule())"
+      >
+        {{ enableLabel() }}
+      </button>
+      <button
+        type="button"
+        class="overflow__danger"
+        role="menuitem"
+        [disabled]="pending()"
+        (click)="remove.emit(rule())"
+      >
+        Delete
+      </button>
+    </div>
+  </details>
+</div>

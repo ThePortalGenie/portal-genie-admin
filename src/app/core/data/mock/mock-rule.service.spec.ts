@@ -6,13 +6,13 @@ describe('MockRuleService', () => {
   it('creates a disabled copy with a Copy suffix', async () => {
     const service = new MockRuleService();
     const rules = await firstValueFrom(service.list());
-    const original = rules.find((rule) => rule.name === 'Trial — 7 Days Remaining');
+    const original = rules.find((rule) => rule.name === '7 Days Left in Your Trial');
     expect(original).toBeDefined();
 
     const copy = await firstValueFrom(service.duplicate(original!.id));
 
     expect(copy.id).not.toBe(original!.id);
-    expect(copy.name).toBe('Trial — 7 Days Remaining (Copy)');
+    expect(copy.name).toBe('7 Days Left in Your Trial (Copy)');
     expect(copy.status).toBe('disabled');
     expect(original?.status).toBe('active');
   });
@@ -20,12 +20,12 @@ describe('MockRuleService', () => {
   it('adds a further suffix when a Copy already exists', async () => {
     const service = new MockRuleService();
     const rules = await firstValueFrom(service.list());
-    const original = rules.find((rule) => rule.name === 'Trial — 7 Days Remaining');
+    const original = rules.find((rule) => rule.name === '7 Days Left in Your Trial');
 
     await firstValueFrom(service.duplicate(original!.id));
     const second = await firstValueFrom(service.duplicate(original!.id));
 
-    expect(second.name).toBe('Trial — 7 Days Remaining (Copy 2)');
+    expect(second.name).toBe('7 Days Left in Your Trial (Copy 2)');
     expect(second.status).toBe('disabled');
   });
 
@@ -36,6 +36,8 @@ describe('MockRuleService', () => {
         name: 'Brand new rule',
         description: '',
         category: 'other',
+        groupId: 'rg_announcements',
+        sequenceOrder: 2,
         status: 'disabled',
         rootGroup: {
           id: 'g1',
@@ -51,6 +53,8 @@ describe('MockRuleService', () => {
     expect(created.name).toBe('Brand new rule');
     const listed = await firstValueFrom(service.list());
     expect(listed[0]?.id).toBe(created.id);
+    expect(created.groupId).toBe('rg_announcements');
+    expect(created.sequenceOrder).toBe(2);
   });
 
   it('updates an existing rule', async () => {
@@ -61,6 +65,8 @@ describe('MockRuleService', () => {
         name: 'Renamed rule',
         description: existing.description,
         category: existing.category,
+        groupId: existing.groupId,
+        sequenceOrder: existing.sequenceOrder,
         status: existing.status,
         rootGroup: {
           id: existing.rootGroup.id,
@@ -79,5 +85,24 @@ describe('MockRuleService', () => {
     expect(updated.id).toBe(existing.id);
     expect(updated.name).toBe('Renamed rule');
     expect(updated.createdAt).toBe(existing.createdAt);
+    expect(updated.groupId).toBe(existing.groupId);
+    expect(updated.sequenceOrder).toBe(existing.sequenceOrder);
+  });
+
+  it('keeps a duplicate in the same group at the end of the sequence', async () => {
+    const service = new MockRuleService();
+    const rules = await firstValueFrom(service.list());
+    const original = rules.find((rule) => rule.name === 'Welcome to Portal Genie');
+    expect(original?.groupId).toBe('rg_trial_onboarding');
+
+    const copy = await firstValueFrom(service.duplicate(original!.id));
+    expect(copy.groupId).toBe('rg_trial_onboarding');
+    expect(copy.sequenceOrder).toBeGreaterThan(original!.sequenceOrder);
+    const groupMax = Math.max(
+      ...rules
+        .filter((rule) => rule.groupId === 'rg_trial_onboarding')
+        .map((rule) => rule.sequenceOrder),
+    );
+    expect(copy.sequenceOrder).toBe(groupMax + 1);
   });
 });

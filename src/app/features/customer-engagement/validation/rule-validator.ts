@@ -30,14 +30,25 @@ export function validateRuleDraft(
     errors.push(issue('rule.category.required', 'Choose a category', 'category'));
   }
 
+  if (!draft.groupId) {
+    errors.push(issue('rule.group.required', 'Choose a rule group', 'groupId'));
+  }
+
+  if (draft.sequenceOrder === null || draft.sequenceOrder === undefined) {
+    errors.push(issue('rule.sequence.required', 'Enter a position in this group', 'sequenceOrder'));
+  } else if (!Number.isInteger(draft.sequenceOrder) || draft.sequenceOrder < 1) {
+    errors.push(
+      issue('rule.sequence.invalid', 'Enter a whole number of 1 or more', 'sequenceOrder'),
+    );
+  }
+
   if (draft.status !== 'active' && draft.status !== 'disabled') {
     errors.push(issue('rule.status.required', 'Choose a status', 'status'));
   }
 
   const conditions = draft.rootGroup.children;
-  if (conditions.length === 0) {
-    errors.push(issue('rule.conditions.min', 'Add at least one condition', 'rootGroup'));
-  }
+  const timingErrors: ValidationIssue[] = [];
+  validateTiming(draft.timing, metricByKey, timingErrors, warnings);
 
   let validConditionCount = 0;
   conditions.forEach((condition, index) => {
@@ -48,8 +59,19 @@ export function validateRuleDraft(
     }
   });
 
-  if (conditions.length > 0 && validConditionCount === 0) {
-    errors.push(issue('rule.conditions.min', 'Add at least one condition', 'rootGroup'));
+  const hasValidEligibility = validConditionCount > 0;
+  const hasValidLifecycleTiming =
+    (draft.timing.mode === 'days_after_date' || draft.timing.mode === 'days_before_date') &&
+    timingErrors.length === 0;
+
+  if (!hasValidEligibility && !hasValidLifecycleTiming) {
+    errors.push(
+      issue(
+        'rule.conditions.min',
+        'Add a customer condition, or choose a lifecycle date',
+        'rootGroup',
+      ),
+    );
   }
 
   if (draft.rootGroup.combinator === 'and') {
@@ -66,7 +88,7 @@ export function validateRuleDraft(
     );
   }
 
-  validateTiming(draft.timing, metricByKey, errors, warnings);
+  errors.push(...timingErrors);
 
   return {
     errors,

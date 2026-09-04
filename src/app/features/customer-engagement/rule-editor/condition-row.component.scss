@@ -3,24 +3,28 @@
 }
 
 .condition-row {
-  display: grid;
-  grid-template-columns: minmax(10rem, 1.4fr) minmax(8rem, 1fr) minmax(8rem, 1fr) auto;
-  gap: var(--space-3);
-  align-items: start;
+  display: flex;
+  flex-wrap: wrap;
+  gap: var(--space-2) var(--space-3);
+  align-items: flex-end;
 }
 
-.operator-static {
-  display: flex;
-  flex-direction: column;
-  gap: var(--space-1);
-  padding-top: 0;
+.condition-row__metric {
+  flex: 1 1 12rem;
+  min-width: 11rem;
 }
 
-.operator-static span:last-child {
-  min-height: var(--control-height);
-  display: flex;
-  align-items: center;
-  font-weight: var(--font-weight-medium);
+.condition-row__operator,
+.condition-row__rest,
+.condition-row__value,
+.condition-row__direction {
+  flex: 1 1 10rem;
+  min-width: 9rem;
+}
+
+.condition-row__days {
+  flex: 0 0 5.5rem;
+  width: 5.5rem;
 }
 
 .range,
@@ -38,7 +42,7 @@
 .condition-row__remove {
   display: flex;
   align-items: flex-end;
-  min-height: calc(var(--control-height) + 1.25rem);
+  margin-left: auto;
 }
 
 .remove {
@@ -57,13 +61,15 @@
   background: rgb(110 3 87 / 6%);
 }
 
-@media (max-width: 63.99rem) {
-  .condition-row {
-    grid-template-columns: 1fr;
+@media (max-width: 39.99rem) {
+  .condition-row__days {
+    flex: 1 1 5.5rem;
+    width: auto;
   }
 
   .condition-row__remove {
-    min-height: 0;
+    margin-left: 0;
+    width: 100%;
     justify-content: flex-start;
   }
 }

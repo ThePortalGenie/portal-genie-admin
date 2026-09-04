@@ -8,7 +8,7 @@ import {
   untracked,
   viewChild,
 } from '@angular/core';
-import { takeUntilDestroyed, toSignal } from '@angular/core/rxjs-interop';
+import { toSignal } from '@angular/core/rxjs-interop';
 import {
   FormArray,
   FormControl,
@@ -18,10 +18,12 @@ import {
 import { ActivatedRoute, Router } from '@angular/router';
 import { forkJoin, map, startWith } from 'rxjs';
 import { MetricCatalogService } from '../../../core/data/metric-catalog.service';
+import { RuleGroupService } from '../../../core/data/rule-group.service';
 import { RuleService } from '../../../core/data/rule.service';
 import { TemplateService } from '../../../core/data/template.service';
 import { CustomerMetric, MetricOperator, TimingDirection } from '../../../core/domain/metric.types';
 import { RULE_CATEGORY_OPTIONS } from '../../../core/domain/rule-category';
+import { RuleGroup } from '../../../core/domain/rule-group';
 import { RULE_STATUS_LABELS, RULE_STATUSES } from '../../../core/domain/rule-status';
 import { CommunicationTemplate } from '../../../core/domain/template.types';
 import { PageHeader } from '../../../layout/page-header/page-header.component';
@@ -31,13 +33,20 @@ import { ConfirmDialog } from '../../../shared/ui/confirm-dialog/confirm-dialog.
 import { EmptyState } from '../../../shared/ui/empty-state/empty-state.component';
 import { ErrorState } from '../../../shared/ui/error-state/error-state.component';
 import { ValidationMessage } from '../../../shared/ui/validation-message/validation-message.component';
-import { ConditionValue, LogicalOperator, RuleDraft, RuleTiming } from '../models/rule.model';
+import { ConditionValue, LogicalOperator, Rule, RuleDraft } from '../models/rule.model';
 import { ValidationIssue, ValidationResult } from '../models/validation.model';
-import { summariseRuleDraft } from '../validation/editor-summary';
+import { previewRuleDraft } from '../validation/editor-summary';
 import { validateRuleDraft } from '../validation/rule-validator';
-import { timingAnchorMetrics } from './condition-draft.helpers';
 import { ConditionFormGroup } from './condition-form';
 import { ConditionList } from './condition-list.component';
+import { draftForCreate, sequenceForGroupChange } from './create-defaults';
+import {
+  draftPartsFromEditorRows,
+  editorRowFromCondition,
+  editorRowsFromDraft,
+  extraLifecycleIssues,
+  type EditorConditionRow,
+} from './lifecycle-authoring';
 import {
   draftFromRule,
   draftsAreEqual,
@@ -47,7 +56,6 @@ import {
 } from './rule-draft.helpers';
 import { RuleSummaryCard } from './rule-summary-card.component';
 import { TemplatePicker } from './template-picker.component';
-import { TimingFields } from './timing-fields.component';
 
 type EditorLoadState = 'loading' | 'ready' | 'error' | 'not-found';
 
@@ -62,7 +70,6 @@ type EditorLoadState = 'loading' | 'ready' | 'error' | 'not-found';
     ErrorState,
     ValidationMessage,
     ConditionList,
-    TimingFields,
     TemplatePicker,
     RuleSummaryCard,
   ],
@@ -74,12 +81,13 @@ export class RuleEditorPage {
   private readonly route = inject(ActivatedRoute);
   private readonly router = inject(Router);
   private readonly ruleService = inject(RuleService);
+  private readonly ruleGroupService = inject(RuleGroupService);
   private readonly templateService = inject(TemplateService);
   private readonly metricCatalogService = inject(MetricCatalogService);
   private readonly fb = inject(NonNullableFormBuilder);
   private readonly confirmDialog = viewChild.required(ConfirmDialog);
 
-  private groupId = newConditionId();
+  private rootGroupId = newConditionId();
 
   protected readonly categoryOptions = RULE_CATEGORY_OPTIONS;
   protected readonly statuses = RULE_STATUSES;
@@ -88,6 +96,8 @@ export class RuleEditorPage {
   protected readonly loadState = signal<EditorLoadState>('loading');
   protected readonly metrics = signal<readonly CustomerMetric[]>([]);
   protected readonly templates = signal<readonly CommunicationTemplate[]>([]);
+  protected readonly groups = signal<readonly RuleGroup[]>([]);
+  protected readonly existingRules = signal<Rule[]>([]);
   protected readonly submitted = signal(false);
   protected readonly saving = signal(false);
   protected readonly saveError = signal(false);
@@ -99,28 +109,47 @@ export class RuleEditorPage {
 
   protected readonly isCreate = computed(() => this.ruleId() === null);
 
+  private readonly returnGroupId = toSignal(
+    this.route.queryParamMap.pipe(map((params) => params.get('fromGroup') ?? params.get('group'))),
+    {
+      initialValue:
+        this.route.snapshot.queryParamMap.get('fromGroup') ??
+        this.route.snapshot.queryParamMap.get('group'),
+    },
+  );
+
+  protected readonly breadcrumbs = computed((): BreadcrumbItem[] => {
+    const items: BreadcrumbItem[] = [
+      { label: 'Customer Engagement' },
+      { label: 'Rules', routerLink: '/engagement/rules' },
+    ];
+    const groupId = this.returnGroupId();
+    const group = this.groups().find((item) => item.id === groupId);
+    if (group) {
+      items.push({
+        label: group.name,
+        routerLink: `/engagement/rules/group/${group.id}`,
+      });
+    }
+    items.push({ label: this.isCreate() ? 'Create rule' : 'Edit rule' });
+    return items;
+  });
+
   protected readonly form = this.fb.group({
     name: '',
     description: '',
     category: this.fb.control<RuleDraft['category']>(''),
+    groupId: '',
+    sequenceOrder: this.fb.control<number | null>(null),
     status: this.fb.control<RuleDraft['status']>('disabled'),
     combinator: this.fb.control<LogicalOperator>('and'),
     conditions: this.fb.array<ConditionFormGroup>([]),
     templateId: '',
-    timingKind: this.fb.control<'on_match' | 'relative'>('on_match'),
-    timingAnchor: '',
-    timingDirection: this.fb.control<TimingDirection | ''>(''),
-    timingDays: new FormControl<number | null>(0),
   });
 
   protected readonly title = computed(() => (this.isCreate() ? 'Create Rule' : 'Edit Rule'));
   protected readonly description =
-    'Define who should qualify, when the communication should send, and which template to use.';
-  protected readonly breadcrumbs = computed((): BreadcrumbItem[] => [
-    { label: 'Customer Engagement' },
-    { label: 'Rules', routerLink: '/engagement/rules' },
-    { label: this.isCreate() ? 'Create rule' : 'Edit rule' },
-  ]);
+    'Describe who this is for, when it should happen, and which communication to send.';
 
   protected readonly draft = toSignal(
     this.form.valueChanges.pipe(
@@ -130,12 +159,18 @@ export class RuleEditorPage {
     { initialValue: emptyRuleDraft() },
   );
 
-  protected readonly validation = computed((): ValidationResult =>
-    validateRuleDraft(this.draft(), this.metrics(), this.templates()),
-  );
+  protected readonly validation = computed((): ValidationResult => {
+    const mapped = validateRuleDraft(this.draft(), this.metrics(), this.templates());
+    const extras = extraLifecycleIssues(this.editorRows(), this.metrics());
+    return {
+      errors: [...mapped.errors, ...extras],
+      warnings: mapped.warnings,
+      isValid: mapped.isValid && extras.length === 0,
+    };
+  });
 
-  protected readonly summary = computed(() =>
-    summariseRuleDraft(this.draft(), this.metrics(), this.templates()),
+  protected readonly preview = computed(() =>
+    previewRuleDraft(this.draft(), this.metrics(), this.templates()),
   );
 
   protected readonly dirty = computed(() => !draftsAreEqual(this.draft(), this.initialDraft()));
@@ -146,18 +181,6 @@ export class RuleEditorPage {
   ]);
 
   constructor() {
-    this.form.controls.timingKind.valueChanges
-      .pipe(takeUntilDestroyed())
-      .subscribe((kind) => {
-        if (kind === 'relative') {
-          this.ensureRelativeDefaults();
-        }
-      });
-
-    this.form.controls.timingAnchor.valueChanges
-      .pipe(takeUntilDestroyed())
-      .subscribe(() => this.ensureDirectionForAnchor());
-
     effect(() => {
       const id = this.ruleId();
       untracked(() => this.reload(id));
@@ -170,15 +193,37 @@ export class RuleEditorPage {
 
   protected fieldError(path: string): ValidationIssue | undefined {
     const control =
-      path === 'name' ? this.form.controls.name : path === 'category' ? this.form.controls.category : null;
+      path === 'name'
+        ? this.form.controls.name
+        : path === 'category'
+          ? this.form.controls.category
+          : path === 'groupId'
+            ? this.form.controls.groupId
+            : path === 'sequenceOrder'
+              ? this.form.controls.sequenceOrder
+              : null;
     if (!this.submitted() && control && !control.touched) {
       return undefined;
     }
     return this.validation().errors.find((issue) => issue.path === path);
   }
 
+  protected onGroupChange(): void {
+    const nextGroupId = this.form.controls.groupId.value;
+    if (!nextGroupId) {
+      return;
+    }
+    const sequence = sequenceForGroupChange(
+      this.existingRules(),
+      nextGroupId,
+      this.initialDraft().groupId,
+      this.form.controls.sequenceOrder.value,
+    );
+    this.form.controls.sequenceOrder.setValue(sequence);
+  }
+
   protected addCondition(): void {
-    this.conditions.push(this.conditionGroup(emptyConditionDraft()));
+    this.conditions.push(this.conditionGroup(editorRowFromCondition(emptyConditionDraft())));
   }
 
   protected removeCondition(index: number): void {
@@ -202,7 +247,7 @@ export class RuleEditorPage {
         return;
       }
     }
-    void this.router.navigate(['/engagement/rules']);
+    void this.router.navigate(this.returnCommands());
   }
 
   protected save(): void {
@@ -220,7 +265,7 @@ export class RuleEditorPage {
 
     request.subscribe({
       next: () => {
-        void this.router.navigate(['/engagement/rules']);
+        void this.router.navigate(this.returnCommands());
       },
       error: () => {
         this.saving.set(false);
@@ -237,14 +282,24 @@ export class RuleEditorPage {
     const catalogs$ = forkJoin({
       metrics: this.metricCatalogService.list(),
       templates: this.templateService.list(),
+      groups: this.ruleGroupService.list(),
+      rules: this.ruleService.list(),
     });
 
     if (!id) {
       catalogs$.subscribe({
-        next: ({ metrics, templates }) => {
+        next: ({ metrics, templates, groups, rules }) => {
           this.metrics.set(metrics);
           this.templates.set(templates);
-          this.applyDraft(emptyRuleDraft());
+          this.groups.set(groups);
+          this.existingRules.set(rules);
+          this.applyDraft(
+            draftForCreate({
+              groupId: this.route.snapshot.queryParamMap.get('group'),
+              groups,
+              rules,
+            }),
+          );
           this.loadState.set('ready');
         },
         error: () => this.loadState.set('error'),
@@ -255,11 +310,15 @@ export class RuleEditorPage {
     forkJoin({
       metrics: this.metricCatalogService.list(),
       templates: this.templateService.list(),
+      groups: this.ruleGroupService.list(),
+      rules: this.ruleService.list(),
       rule: this.ruleService.getById(id),
     }).subscribe({
-      next: ({ metrics, templates, rule }) => {
+      next: ({ metrics, templates, groups, rules, rule }) => {
         this.metrics.set(metrics);
         this.templates.set(templates);
+        this.groups.set(groups);
+        this.existingRules.set(rules);
         this.applyDraft(draftFromRule(rule));
         this.loadState.set('ready');
       },
@@ -271,106 +330,82 @@ export class RuleEditorPage {
   }
 
   private applyDraft(draft: RuleDraft): void {
-    this.groupId = draft.rootGroup.id;
+    this.rootGroupId = draft.rootGroup.id;
     this.conditions.clear();
-    const children = draft.rootGroup.children.length
-      ? draft.rootGroup.children
-      : [emptyConditionDraft()];
-    for (const child of children) {
-      this.conditions.push(this.conditionGroup(child));
+    for (const row of editorRowsFromDraft(draft, this.metrics())) {
+      this.conditions.push(this.conditionGroup(row));
     }
 
-    const relative = draft.timing.mode !== 'on_match';
     this.form.patchValue({
       name: draft.name,
       description: draft.description,
       category: draft.category,
+      groupId: draft.groupId,
+      sequenceOrder: draft.sequenceOrder,
       status: draft.status,
       combinator: draft.rootGroup.combinator,
       templateId: draft.templateId,
-      timingKind: relative ? 'relative' : 'on_match',
-      timingAnchor: draft.timing.anchorMetricKey ?? '',
-      timingDirection:
-        draft.timing.mode === 'days_before_date'
-          ? 'before'
-          : draft.timing.mode === 'days_after_date'
-            ? 'after'
-            : '',
-      timingDays: draft.timing.delayDays ?? 0,
     });
-    if (relative) {
-      this.ensureRelativeDefaults();
-    }
     this.form.markAsPristine();
     this.initialDraft.set(this.toDraft());
   }
 
-  private conditionGroup(condition: {
-    id: string;
-    metricKey: string;
-    operator: MetricOperator | '';
-    value: ConditionValue;
-  }): ConditionFormGroup {
+  private conditionGroup(row: EditorConditionRow): ConditionFormGroup {
     return this.fb.group({
-      id: condition.id,
-      metricKey: condition.metricKey,
-      operator: this.fb.control<MetricOperator | ''>(condition.operator),
-      value: new FormControl<ConditionValue>(condition.value),
+      id: row.id,
+      metricKey: row.metricKey,
+      operator: this.fb.control<MetricOperator | ''>(row.operator),
+      value: new FormControl<ConditionValue>(row.value),
+      offsetDays: new FormControl<number | null>(row.offsetDays),
+      timingDirection: this.fb.control<TimingDirection | ''>(row.timingDirection),
     }) as ConditionFormGroup;
   }
 
   private toDraft(): RuleDraft {
     const value = this.form.getRawValue();
-    const timing: RuleTiming =
-      value.timingKind === 'on_match'
-        ? { mode: 'on_match' }
-        : {
-            mode: value.timingDirection === 'before' ? 'days_before_date' : 'days_after_date',
-            delayDays: value.timingDays ?? undefined,
-            anchorMetricKey: value.timingAnchor || undefined,
-          };
+    const { children, timing } = draftPartsFromEditorRows(this.editorRows(), this.metrics());
 
     return {
       name: value.name,
       description: value.description,
       category: value.category,
+      groupId: value.groupId,
+      sequenceOrder: coerceSequenceOrder(value.sequenceOrder),
       status: value.status,
       rootGroup: {
-        id: this.groupId,
+        id: this.rootGroupId,
         combinator: value.combinator,
-        children: value.conditions.map((child) => ({
-          id: child.id,
-          metricKey: child.metricKey,
-          operator: child.operator,
-          value: child.value ?? null,
-        })),
+        children,
       },
       templateId: value.templateId,
       timing,
     };
   }
 
-  private ensureRelativeDefaults(): void {
-    const anchors = timingAnchorMetrics(this.metrics());
-    if (!anchors.length) {
-      return;
+  private returnCommands(): string[] {
+    const groupId = this.returnGroupId();
+    if (groupId) {
+      return ['/engagement/rules/group', groupId];
     }
-    const current = this.form.controls.timingAnchor.value;
-    const anchor = anchors.find((item) => item.key === current) ?? anchors[0];
-    this.form.controls.timingAnchor.setValue(anchor.key, { emitEvent: false });
-    this.ensureDirectionForAnchor();
-    if (this.form.controls.timingDays.value === null) {
-      this.form.controls.timingDays.setValue(0);
-    }
+    return ['/engagement/rules'];
   }
 
-  private ensureDirectionForAnchor(): void {
-    const key = this.form.controls.timingAnchor.value;
-    const metric = timingAnchorMetrics(this.metrics()).find((item) => item.key === key);
-    const allowed = metric?.timingDirections ?? [];
-    const current = this.form.controls.timingDirection.value;
-    if (!current || !allowed.includes(current)) {
-      this.form.controls.timingDirection.setValue(allowed[0] ?? '');
-    }
+  private editorRows(): EditorConditionRow[] {
+    return this.form.getRawValue().conditions.map((row) => ({
+      id: row.id,
+      metricKey: row.metricKey,
+      operator: row.operator,
+      value: row.value ?? null,
+      offsetDays: row.offsetDays,
+      timingDirection: row.timingDirection,
+    }));
   }
+}
+
+function coerceSequenceOrder(value: number | string | null): number | null {
+  if (value === null || value === '') {
+    return null;
+  }
+  const parsed = typeof value === 'number' ? value : Number(value);
+  return Number.isFinite(parsed) ? parsed : null;
 }

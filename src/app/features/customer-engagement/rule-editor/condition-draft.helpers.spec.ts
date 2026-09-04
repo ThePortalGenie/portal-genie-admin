@@ -51,6 +51,11 @@ describe('condition draft helpers', () => {
     expect(next.value).toBeNull();
   });
 
+  it('reveals an operator immediately for duration metrics', () => {
+    const next = applyMetricChange(emptyConditionDraft(), metric('daysSinceRegistration'));
+    expect(next.operator).toBe('eq');
+  });
+
   it('maps boolean Yes/No to is_true and is_false', () => {
     expect(operatorFromBooleanChoice('yes')).toBe('is_true');
     expect(operatorFromBooleanChoice('no')).toBe('is_false');

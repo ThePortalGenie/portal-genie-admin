@@ -2,11 +2,36 @@ import { describe, expect, it } from 'vitest';
 import { METRIC_CATALOG } from '../../../core/domain/metric-catalog';
 import { TEMPLATE_FIXTURES } from '../../../core/data/mock/fixtures/templates.fixture';
 import { emptyRuleDraft } from '../rule-editor/rule-draft.helpers';
-import { summariseRuleDraft } from './editor-summary';
+import { previewRuleDraft } from './editor-summary';
 
-describe('summariseRuleDraft', () => {
-  it('builds a WHO / WHEN / WHAT summary from the draft', () => {
+describe('previewRuleDraft', () => {
+  it('leads with lifecycle timing, then conditions, then the communication', () => {
     const draft = emptyRuleDraft();
+    draft.name = 'Trial reminder';
+    draft.category = 'conversion';
+    draft.groupId = 'rg_trial_onboarding';
+    draft.sequenceOrder = 3;
+    draft.rootGroup.children = [
+      { id: '1', metricKey: 'logoUploaded', operator: 'is_false', value: null },
+    ];
+    draft.timing = { mode: 'days_before_date', delayDays: 7, anchorMetricKey: 'trialExpiresAt' };
+    draft.templateId = 'setup-reminder';
+
+    const preview = previewRuleDraft(draft, METRIC_CATALOG, TEMPLATE_FIXTURES);
+    expect(preview.guidance).toBeNull();
+    expect(preview.lines).toEqual([
+      '7 days before a customer’s trial expires',
+      'if they have not uploaded their company logo',
+      'send “Setup reminder”.',
+    ]);
+  });
+
+  it('reads a complete registration rule as a natural-language instruction', () => {
+    const draft = emptyRuleDraft();
+    draft.name = 'Complete setup';
+    draft.category = 'onboarding';
+    draft.groupId = 'rg_trial_onboarding';
+    draft.sequenceOrder = 2;
     draft.rootGroup.children = [
       { id: '1', metricKey: 'trialStatus', operator: 'is', value: 'in_trial' },
       { id: '2', metricKey: 'logoUploaded', operator: 'is_false', value: null },
@@ -14,17 +39,115 @@ describe('summariseRuleDraft', () => {
     draft.timing = { mode: 'days_after_date', delayDays: 3, anchorMetricKey: 'registeredAt' };
     draft.templateId = 'setup-reminder';
 
-    const summary = summariseRuleDraft(draft, METRIC_CATALOG, TEMPLATE_FIXTURES);
-    expect(summary.whoLines).toEqual(['In trial', 'Logo not uploaded']);
-    expect(summary.combinator).toBe('and');
-    expect(summary.whenText).toBe('3 days after registration');
-    expect(summary.whatText).toBe('Send “Setup reminder”');
+    const preview = previewRuleDraft(draft, METRIC_CATALOG, TEMPLATE_FIXTURES);
+    expect(preview.guidance).toBeNull();
+    expect(preview.lines).toEqual([
+      '3 days after a customer registers',
+      'if they are in trial',
+      'and they have not uploaded their company logo',
+      'send “Setup reminder”.',
+    ]);
   });
 
-  it('uses on-match wording when no relative timing is set', () => {
+  it('uses OR wording when any condition may match', () => {
     const draft = emptyRuleDraft();
-    const summary = summariseRuleDraft(draft, METRIC_CATALOG, TEMPLATE_FIXTURES);
-    expect(summary.whenText).toBe('When the conditions become true');
-    expect(summary.whatText).toBe('No communication selected');
+    draft.name = 'Either path';
+    draft.category = 'onboarding';
+    draft.groupId = 'rg_adoption';
+    draft.sequenceOrder = 1;
+    draft.rootGroup.combinator = 'or';
+    draft.rootGroup.children = [
+      { id: '1', metricKey: 'hasCreatedFolder', operator: 'is_false', value: null },
+      { id: '2', metricKey: 'hasUploadedDocument', operator: 'is_false', value: null },
+    ];
+    draft.templateId = 'first-folder-adoption';
+
+    const preview = previewRuleDraft(draft, METRIC_CATALOG, TEMPLATE_FIXTURES);
+    expect(preview.lines).toEqual([
+      'When a customer has not created a folder',
+      'or they have not uploaded a document',
+      'send “First folder adoption”.',
+    ]);
+  });
+
+  it('describes inactivity in everyday language', () => {
+    const draft = emptyRuleDraft();
+    draft.name = 'Nudge';
+    draft.category = 'engagement';
+    draft.groupId = 'rg_engagement';
+    draft.sequenceOrder = 1;
+    draft.rootGroup.children = [
+      {
+        id: '1',
+        metricKey: 'daysSinceLastPortalSignIn',
+        operator: 'gt',
+        value: 14,
+      },
+    ];
+    draft.templateId = 'setup-reminder';
+
+    const preview = previewRuleDraft(draft, METRIC_CATALOG, TEMPLATE_FIXTURES);
+    expect(preview.lines[0]).toBe(
+      'When a customer has not signed in to their portal for 14 days',
+    );
+  });
+
+  it('treats 0 days before trial expiry as the expiry date itself', () => {
+    const draft = emptyRuleDraft();
+    draft.name = 'Expired';
+    draft.category = 'conversion';
+    draft.groupId = 'rg_trial_onboarding';
+    draft.sequenceOrder = 6;
+    draft.rootGroup.children = [
+      { id: '1', metricKey: 'trialStatus', operator: 'is', value: 'trial_expired' },
+    ];
+    draft.timing = { mode: 'days_before_date', delayDays: 0, anchorMetricKey: 'trialExpiresAt' };
+    draft.templateId = 'setup-reminder';
+
+    const preview = previewRuleDraft(draft, METRIC_CATALOG, TEMPLATE_FIXTURES);
+    expect(preview.lines[0]).toBe('On trial expiry');
+  });
+
+  it('guides the next missing step when the rule is incomplete', () => {
+    const draft = emptyRuleDraft();
+    const unnamed = previewRuleDraft(draft, METRIC_CATALOG, TEMPLATE_FIXTURES);
+    expect(unnamed.guidance).toBe('This rule is incomplete. Give the rule a name.');
+
+    draft.name = 'Welcome';
+    const noCategory = previewRuleDraft(draft, METRIC_CATALOG, TEMPLATE_FIXTURES);
+    expect(noCategory.guidance).toBe('This rule is incomplete. Choose a category.');
+
+    draft.category = 'onboarding';
+    const noGroup = previewRuleDraft(draft, METRIC_CATALOG, TEMPLATE_FIXTURES);
+    expect(noGroup.guidance).toBe('This rule is incomplete. Choose a rule group.');
+
+    draft.groupId = 'rg_trial_onboarding';
+    draft.sequenceOrder = 1;
+    const noCondition = previewRuleDraft(draft, METRIC_CATALOG, TEMPLATE_FIXTURES);
+    expect(noCondition.guidance).toBe('This rule is incomplete. Add a customer condition.');
+
+    draft.rootGroup.children = [
+      { id: '1', metricKey: 'trialStatus', operator: 'is', value: 'in_trial' },
+    ];
+    const noTemplate = previewRuleDraft(draft, METRIC_CATALOG, TEMPLATE_FIXTURES);
+    expect(noTemplate.guidance).toBe(
+      'This rule is incomplete. Choose a communication to finish the rule.',
+    );
+    expect(noTemplate.lines[0]).toBe('When a customer is in trial');
+  });
+
+  it('does not ask for a customer condition when lifecycle timing is set', () => {
+    const draft = emptyRuleDraft();
+    draft.name = 'Trial reminder';
+    draft.category = 'conversion';
+    draft.groupId = 'rg_trial_onboarding';
+    draft.sequenceOrder = 1;
+    draft.rootGroup.children = [];
+    draft.timing = { mode: 'days_before_date', delayDays: 7, anchorMetricKey: 'trialExpiresAt' };
+    draft.templateId = 'trial-expiry-reminder';
+
+    const preview = previewRuleDraft(draft, METRIC_CATALOG, TEMPLATE_FIXTURES);
+    expect(preview.guidance).toBeNull();
+    expect(preview.lines[0]).toBe('7 days before a customer’s trial expires');
   });
 });

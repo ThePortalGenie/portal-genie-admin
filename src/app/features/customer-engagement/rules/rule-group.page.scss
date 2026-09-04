@@ -1,0 +1,129 @@
+:host {
+  display: block;
+}
+
+.group-status,
+.group-note {
+  color: var(--color-text-muted);
+}
+
+.group-note {
+  max-width: 42rem;
+  margin-bottom: var(--space-5);
+}
+
+.toolbar {
+  display: flex;
+  flex-wrap: wrap;
+  align-items: flex-end;
+  gap: var(--space-3);
+  margin-bottom: var(--space-5);
+}
+
+.toolbar__search {
+  flex: 1 1 16rem;
+  min-width: 12rem;
+  max-width: 28rem;
+}
+
+.journey {
+  margin: 0;
+  padding: 0;
+  list-style: none;
+}
+
+.journey__item {
+  display: grid;
+  grid-template-columns: 2.25rem 1.25rem minmax(0, 1fr);
+  column-gap: var(--space-3);
+  align-items: stretch;
+}
+
+.journey__index {
+  padding-top: 0.15rem;
+  font-size: var(--font-size-caption);
+  font-weight: var(--font-weight-semibold);
+  letter-spacing: 0.04em;
+  color: var(--portal-steel);
+  font-variant-numeric: tabular-nums;
+}
+
+.journey__rail {
+  position: relative;
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+}
+
+.journey__dot {
+  width: 0.65rem;
+  height: 0.65rem;
+  margin-top: 0.45rem;
+  border: 2px solid var(--portal-blue);
+  border-radius: 50%;
+  background: var(--color-canvas);
+  flex: 0 0 auto;
+}
+
+.journey__line {
+  width: 1px;
+  flex: 1 1 auto;
+  min-height: 1.5rem;
+  margin: var(--space-1) 0 0;
+  background: var(--color-border-strong);
+}
+
+.journey__card {
+  min-width: 0;
+  margin-bottom: var(--space-5);
+  padding: var(--space-4);
+  border: 1px solid var(--color-border);
+  border-radius: var(--radius-card);
+  background: var(--color-surface);
+}
+
+.journey__item--last .journey__card {
+  margin-bottom: 0;
+}
+
+.journey__header {
+  display: flex;
+  flex-wrap: wrap;
+  align-items: center;
+  gap: var(--space-2) var(--space-3);
+  margin-bottom: var(--space-2);
+}
+
+.journey__title {
+  flex: 1 1 12rem;
+  margin: 0;
+  font-size: var(--font-size-h2);
+}
+
+.journey__name {
+  color: var(--portal-navy);
+  text-decoration: none;
+}
+
+.journey__name:hover {
+  color: var(--portal-blue);
+  text-decoration: underline;
+}
+
+.journey__timing {
+  margin: 0 0 var(--space-1);
+  font-weight: var(--font-weight-medium);
+  color: var(--portal-navy);
+}
+
+.journey__meta {
+  margin: 0;
+  color: var(--color-text-muted);
+}
+
+@media (max-width: 39.99rem) {
+  .journey__item {
+    grid-template-columns: 1.5rem 0.85rem minmax(0, 1fr);
+    column-gap: var(--space-2);
+  }
+}

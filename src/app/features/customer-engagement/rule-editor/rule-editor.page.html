@@ -28,138 +28,155 @@
   }
   @default {
     <div class="editor" [formGroup]="form">
-      <div class="editor__form">
-        <section class="editor-section" aria-labelledby="details-heading">
-          <h2 id="details-heading">Rule details</h2>
-          <div class="details-grid">
-            <div class="pg-field details-grid__name">
-              <label class="pg-label" for="rule-name">
-                Rule name <span class="pg-required" aria-hidden="true">*</span>
-              </label>
-              <input
-                class="pg-control"
-                id="rule-name"
-                type="text"
-                formControlName="name"
-                [class.pg-control--error]="!!fieldError('name')"
-                [attr.aria-invalid]="!!fieldError('name')"
-                autocomplete="off"
-              />
-              @if (fieldError('name'); as issue) {
-                <ui-validation-message [message]="issue.message" />
-              }
-            </div>
+      <section class="editor-section" aria-labelledby="details-heading">
+        <h2 id="details-heading">Rule details</h2>
+        <div class="pg-field details-name">
+          <label class="pg-label" for="rule-name">
+            Rule name <span class="pg-required" aria-hidden="true">*</span>
+          </label>
+          <input
+            class="pg-control"
+            id="rule-name"
+            type="text"
+            formControlName="name"
+            [class.pg-control--error]="!!fieldError('name')"
+            [attr.aria-invalid]="!!fieldError('name')"
+            autocomplete="off"
+          />
+          @if (fieldError('name'); as issue) {
+            <ui-validation-message [message]="issue.message" />
+          }
+        </div>
 
-            <div class="pg-field">
-              <label class="pg-label" for="rule-category">
-                Category <span class="pg-required" aria-hidden="true">*</span>
-              </label>
-              <select
-                class="pg-select"
-                id="rule-category"
-                formControlName="category"
-                [class.pg-control--error]="!!fieldError('category')"
-                [attr.aria-invalid]="!!fieldError('category')"
-              >
-                <option value="">Choose a category</option>
-                @for (option of categoryOptions; track option.id) {
-                  <option [value]="option.id">{{ option.label }}</option>
-                }
-              </select>
-              @if (fieldError('category'); as issue) {
-                <ui-validation-message [message]="issue.message" />
+        <div class="details-secondary">
+          <div class="pg-field">
+            <label class="pg-label" for="rule-category">
+              Category <span class="pg-required" aria-hidden="true">*</span>
+            </label>
+            <select
+              class="pg-select"
+              id="rule-category"
+              formControlName="category"
+              [class.pg-control--error]="!!fieldError('category')"
+              [attr.aria-invalid]="!!fieldError('category')"
+            >
+              <option value="">Choose a category</option>
+              @for (option of categoryOptions; track option.id) {
+                <option [value]="option.id">{{ option.label }}</option>
               }
-            </div>
-
-            <div class="pg-field">
-              <span class="pg-label" id="rule-status-label">
-                Status <span class="pg-required" aria-hidden="true">*</span>
-              </span>
-              <div class="pg-segmented" role="radiogroup" aria-labelledby="rule-status-label">
-                @for (status of statuses; track status) {
-                  <label class="pg-segmented__option">
-                    <input type="radio" formControlName="status" [value]="status" />
-                    {{ statusLabels[status] }}
-                  </label>
-                }
-              </div>
-            </div>
+            </select>
+            @if (fieldError('category'); as issue) {
+              <ui-validation-message [message]="issue.message" />
+            }
+            <p class="pg-hint">Describes the purpose of this rule.</p>
           </div>
 
           <div class="pg-field">
-            <label class="pg-label" for="rule-description">Description</label>
-            <textarea
-              class="pg-textarea"
-              id="rule-description"
-              formControlName="description"
-              rows="3"
-            ></textarea>
-          </div>
-        </section>
-
-        <section class="editor-section" aria-labelledby="who-heading">
-          <h2 id="who-heading">Who</h2>
-          <p class="section-lead">Customers who match these conditions.</p>
-          <app-condition-list
-            [combinator]="form.controls.combinator"
-            [conditions]="conditions"
-            [metrics]="metrics()"
-            [issues]="validation().errors"
-            [showErrors]="submitted()"
-            (add)="addCondition()"
-            (remove)="removeCondition($event)"
-          />
-        </section>
-
-        <section class="editor-section" aria-labelledby="when-heading">
-          <h2 id="when-heading">When</h2>
-          <p class="section-lead">When the communication should become eligible. This does not send email.</p>
-          <app-timing-fields
-            [kind]="form.controls.timingKind"
-            [anchor]="form.controls.timingAnchor"
-            [direction]="form.controls.timingDirection"
-            [days]="form.controls.timingDays"
-            [metrics]="metrics()"
-            [issues]="allIssues()"
-            [showErrors]="submitted()"
-          />
-          <p class="pg-hint timing-note">
-            Each customer should receive this communication once when they qualify. Sending and
-            deduplication happen outside this application.
-          </p>
-        </section>
-
-        <section class="editor-section" aria-labelledby="what-heading">
-          <h2 id="what-heading">What</h2>
-          <p class="section-lead">The system communication to send. Templates cannot be edited here.</p>
-          <app-template-picker
-            [control]="form.controls.templateId"
-            [templates]="templates()"
-            [issues]="validation().errors"
-            [showErrors]="submitted()"
-          />
-        </section>
-
-        <div class="editor-footer">
-          @if (saveError()) {
-            <ui-validation-message message="The rule could not be saved. Try again." />
-          }
-          <div class="editor-footer__actions">
-            <ui-button variant="secondary" [disabled]="saving()" (click)="cancel()">Cancel</ui-button>
-            <ui-button [disabled]="!canSave()" (click)="save()">
-              {{ saving() ? 'Saving…' : 'Save Rule' }}
-            </ui-button>
+            <span class="pg-label" id="rule-status-label">Status</span>
+            <div class="pg-segmented" role="radiogroup" aria-labelledby="rule-status-label">
+              @for (status of statuses; track status) {
+                <label class="pg-segmented__option">
+                  <input type="radio" formControlName="status" [value]="status" />
+                  {{ statusLabels[status] }}
+                </label>
+              }
+            </div>
           </div>
         </div>
-      </div>
 
-      <div class="editor__aside">
-        <app-rule-summary-card
-          [summary]="summary()"
-          [errors]="validation().errors"
-          [warnings]="validation().warnings"
-          [showIssueList]="true"
+        <div class="details-secondary">
+          <div class="pg-field">
+            <label class="pg-label" for="rule-group">
+              Rule group <span class="pg-required" aria-hidden="true">*</span>
+            </label>
+            <select
+              class="pg-select"
+              id="rule-group"
+              formControlName="groupId"
+              [class.pg-control--error]="!!fieldError('groupId')"
+              [attr.aria-invalid]="!!fieldError('groupId')"
+              (change)="onGroupChange()"
+            >
+              <option value="">Choose a rule group</option>
+              @for (group of groups(); track group.id) {
+                <option [value]="group.id">{{ group.name }}</option>
+              }
+            </select>
+            @if (fieldError('groupId'); as issue) {
+              <ui-validation-message [message]="issue.message" />
+            }
+            <p class="pg-hint">Organises related rules into a customer journey.</p>
+          </div>
+
+          <div class="pg-field details-position">
+            <label class="pg-label" for="rule-sequence">
+              Position in group <span class="pg-required" aria-hidden="true">*</span>
+            </label>
+            <input
+              class="pg-control"
+              id="rule-sequence"
+              type="number"
+              min="1"
+              step="1"
+              formControlName="sequenceOrder"
+              [class.pg-control--error]="!!fieldError('sequenceOrder')"
+              [attr.aria-invalid]="!!fieldError('sequenceOrder')"
+            />
+            @if (fieldError('sequenceOrder'); as issue) {
+              <ui-validation-message [message]="issue.message" />
+            }
+            <p class="pg-hint">
+              Display order in this journey. It does not change when the communication is sent.
+            </p>
+          </div>
+        </div>
+
+        <div class="pg-field details-description">
+          <label class="pg-label" for="rule-description">Description</label>
+          <textarea
+            class="pg-textarea"
+            id="rule-description"
+            formControlName="description"
+            rows="2"
+          ></textarea>
+        </div>
+      </section>
+
+      <section class="editor-section" aria-labelledby="when-heading">
+        <h2 id="when-heading">When</h2>
+        <app-condition-list
+          [combinator]="form.controls.combinator"
+          [conditions]="conditions"
+          [metrics]="metrics()"
+          [issues]="allIssues()"
+          [showErrors]="submitted()"
+          (add)="addCondition()"
+          (remove)="removeCondition($event)"
         />
+      </section>
+
+      <section class="editor-section" aria-labelledby="then-heading">
+        <h2 id="then-heading">Then</h2>
+        <app-template-picker
+          [control]="form.controls.templateId"
+          [templates]="templates()"
+          [issues]="validation().errors"
+          [showErrors]="submitted()"
+        />
+      </section>
+
+      <app-rule-summary-card [preview]="preview()" />
+
+      <div class="editor-footer">
+        @if (saveError()) {
+          <ui-validation-message message="The rule could not be saved. Try again." />
+        }
+        <div class="editor-footer__actions">
+          <ui-button variant="secondary" [disabled]="saving()" (click)="cancel()">Cancel</ui-button>
+          <ui-button [disabled]="!canSave()" (click)="save()">
+            {{ saving() ? 'Saving…' : 'Save Rule' }}
+          </ui-button>
+        </div>
       </div>
     </div>
   }

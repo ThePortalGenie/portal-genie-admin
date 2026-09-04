@@ -11,6 +11,7 @@ import {
 } from '../../../features/customer-engagement/models/rule.model';
 import { ruleFromDraft } from '../../../features/customer-engagement/rule-editor/rule-draft.helpers';
 import { RuleService } from '../rule.service';
+import { nextSequenceOrder } from '../../../features/customer-engagement/rules/rule-group.helpers';
 import { RULE_FIXTURES } from './fixtures/rules.fixture';
 import { mockNotFound, mockOf, mockVoid } from './mock-async';
 
@@ -69,6 +70,8 @@ export class MockRuleService extends RuleService {
         this.rules.map((rule) => rule.name),
       ),
       status: 'disabled',
+      groupId: source.groupId,
+      sequenceOrder: nextSequenceOrder(this.rules, source.groupId),
       rootGroup: rematerializeGroup(source.rootGroup),
       createdAt: now,
       updatedAt: now,

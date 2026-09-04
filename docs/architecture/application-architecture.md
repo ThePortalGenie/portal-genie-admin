@@ -200,7 +200,7 @@ No composer, subject/body editing, Postmark, or send. Future template management
 
 ### D7 — Mock adapters behind abstract services
 
-**Decision:** `RuleService`, `TemplateService`, and `MetricCatalogService` are abstract contracts. v1 provides mock adapters. `CustomerUsageService` is specified but not implemented.
+**Decision:** `RuleService`, `RuleGroupService`, `TemplateService`, and `MetricCatalogService` are abstract contracts. v1 provides mock adapters. `CustomerUsageService` is specified but not implemented.
 
 **Reason:** Presentation must not change when HTTP is introduced.
 
@@ -224,6 +224,12 @@ The editor does **not** expose send-once, repeat, cooldown, frequency, or re-ent
 | `other` | Other |
 
 Keep this as frontend catalog data (same pattern as metrics), not literals in templates. **Category is required** before a rule can be saved.
+
+### D15 — Rule groups are journeys, not categories (Phase 4B)
+
+**Decision:** A **Rule Group** is an administrator-facing collection / customer communication journey (Trial & Onboarding, Adoption, Engagement, Announcements). **Rule Category** remains a separate classification of a single rule’s purpose (Onboarding, Adoption, Engagement, Conversion, Announcement, Other).
+
+A rule stores `groupId` and `sequenceOrder`. `sequenceOrder` is **display and organisational ordering only**. It does not mean “rule 2 runs after rule 1”, and it does not affect eligibility, timing, evaluation, or send behaviour. Those remain on the rule definition. The backend must not treat group sequence as an execution graph.
 
 ### D10 — Trial and account status values are temporary mock contracts (approved for frontend)
 
@@ -298,6 +304,7 @@ A1, A3, A6, A7, and A8 were promoted to product decisions.
 | Q9 | Duplicate rule names allowed. Names are labels, not unique ids. No blocking duplicate-name error. |
 | Q10 | Rule category is **required** before save. |
 | Q11 | Timing days may be **0**. Negatives invalid. Direction is before/after, not a sign. |
+| Q12 | Rule Group is a journey/collection, required on save, and distinct from Rule Category. Sequence order is administrative display only. |
 
 ---
 

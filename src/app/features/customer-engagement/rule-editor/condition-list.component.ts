@@ -7,6 +7,11 @@ import { UiButton } from '../../../shared/ui/button/button.component';
 import { ValidationMessage } from '../../../shared/ui/validation-message/validation-message.component';
 import { ConditionFormGroup } from './condition-form';
 import { ConditionRow } from './condition-row.component';
+import {
+  EditorConditionRow,
+  isLifecycleTimingKey,
+  issuesForEditorRow,
+} from './lifecycle-authoring';
 
 @Component({
   selector: 'app-condition-list',
@@ -24,9 +29,16 @@ export class ConditionList {
   readonly add = output<void>();
   readonly remove = output<number>();
 
+  protected joinLabel(index: number): string {
+    const previous = this.conditions().at(index - 1);
+    if (previous && isLifecycleTimingKey(previous.controls.metricKey.value, this.metrics())) {
+      return 'AND';
+    }
+    return this.combinator().value === 'or' ? 'OR' : 'AND';
+  }
+
   protected issuesFor(index: number): ValidationIssue[] {
-    const prefix = `rootGroup.children.${index}.`;
-    return this.issues().filter((issue) => issue.path.startsWith(prefix));
+    return issuesForEditorRow(this.editorRows(), index, this.metrics(), this.issues());
   }
 
   protected groupIssue(): ValidationIssue | undefined {
@@ -34,5 +46,16 @@ export class ConditionList {
       return undefined;
     }
     return this.issues().find((issue) => issue.path === 'rootGroup');
+  }
+
+  private editorRows(): EditorConditionRow[] {
+    return this.conditions().getRawValue().map((row) => ({
+      id: row.id,
+      metricKey: row.metricKey,
+      operator: row.operator,
+      value: row.value ?? null,
+      offsetDays: row.offsetDays,
+      timingDirection: row.timingDirection,
+    }));
   }
 }

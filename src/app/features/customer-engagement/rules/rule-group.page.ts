@@ -2,22 +2,25 @@ import {
   ChangeDetectionStrategy,
   Component,
   computed,
+  effect,
   inject,
   signal,
+  untracked,
   viewChild,
 } from '@angular/core';
-import { Router, RouterLink } from '@angular/router';
-import { forkJoin, Observable } from 'rxjs';
+import { toSignal } from '@angular/core/rxjs-interop';
+import { ActivatedRoute, Router, RouterLink } from '@angular/router';
+import { forkJoin, map, Observable } from 'rxjs';
 import { MetricCatalogService } from '../../../core/data/metric-catalog.service';
 import { RuleGroupService } from '../../../core/data/rule-group.service';
 import { RuleService } from '../../../core/data/rule.service';
 import { TemplateService } from '../../../core/data/template.service';
 import { CustomerMetric } from '../../../core/domain/metric.types';
-import { RULE_CATEGORY_OPTIONS } from '../../../core/domain/rule-category';
+import { RULE_CATEGORY_LABELS } from '../../../core/domain/rule-category';
 import { RuleGroup } from '../../../core/domain/rule-group';
-import { RULE_STATUS_LABELS, RULE_STATUSES } from '../../../core/domain/rule-status';
 import { CommunicationTemplate } from '../../../core/domain/template.types';
 import { PageHeader } from '../../../layout/page-header/page-header.component';
+import { BreadcrumbItem } from '../../../shared/ui/breadcrumb/breadcrumb.model';
 import { UiButton } from '../../../shared/ui/button/button.component';
 import { ConfirmDialog } from '../../../shared/ui/confirm-dialog/confirm-dialog.component';
 import { EmptyState } from '../../../shared/ui/empty-state/empty-state.component';
@@ -25,34 +28,24 @@ import { ErrorState } from '../../../shared/ui/error-state/error-state.component
 import { SearchField } from '../../../shared/ui/search-field/search-field.component';
 import { StatusBadge } from '../../../shared/ui/status-badge/status-badge.component';
 import { Rule } from '../models/rule.model';
-import { summariseRule } from '../validation/rule-summary';
-import { formatIsoDate } from './format-iso-date';
-import { groupOverviews, RuleGroupOverview } from './rule-group.helpers';
-import {
-  DEFAULT_RULE_LIST_FILTERS,
-  filterRules,
-  isRuleListFiltered,
-  RULE_FILTER_ALL,
-  RuleCategoryFilter,
-  ruleListCounts,
-  RuleListFilters,
-  RuleStatusFilter,
-} from './rule-list.filters';
+import { summariseJourneyItem } from '../validation/rule-summary';
+import { filterRules, RULE_FILTER_ALL } from './rule-list.filters';
+import { RuleActionsMenu } from './rule-actions-menu.component';
+import { rulesForGroup } from './rule-group.helpers';
 
-type LoadState = 'loading' | 'loaded' | 'error';
+type LoadState = 'loading' | 'loaded' | 'error' | 'not-found';
 
-type RuleRow = {
+type JourneyRow = {
   rule: Rule;
-  categoryLabel: string;
-  groupLabel: string;
-  summary: string;
+  indexLabel: string;
+  timing: string;
+  eligibility: string;
   templateName: string;
-  updatedLabel: string;
-  enableLabel: string;
+  categoryLabel: string;
 };
 
 @Component({
-  selector: 'app-rules-list-page',
+  selector: 'app-rule-group-page',
   imports: [
     PageHeader,
     UiButton,
@@ -62,12 +55,14 @@ type RuleRow = {
     SearchField,
     StatusBadge,
     RouterLink,
+    RuleActionsMenu,
   ],
   changeDetection: ChangeDetectionStrategy.OnPush,
-  templateUrl: './rules-list.page.html',
-  styleUrl: './rules-list.page.scss',
+  templateUrl: './rule-group.page.html',
+  styleUrl: './rule-group.page.scss',
 })
-export class RulesListPage {
+export class RuleGroupPage {
+  private readonly route = inject(ActivatedRoute);
   private readonly router = inject(Router);
   private readonly ruleService = inject(RuleService);
   private readonly ruleGroupService = inject(RuleGroupService);
@@ -75,38 +70,24 @@ export class RulesListPage {
   private readonly metricCatalogService = inject(MetricCatalogService);
   private readonly confirmDialog = viewChild.required(ConfirmDialog);
 
-  protected readonly breadcrumbs = [
-    { label: 'Customer Engagement' },
-    { label: 'Rules' },
-  ];
+  private readonly groupId = toSignal(
+    this.route.paramMap.pipe(map((params) => params.get('groupId') ?? '')),
+    { initialValue: this.route.snapshot.paramMap.get('groupId') ?? '' },
+  );
 
   protected readonly loadState = signal<LoadState>('loading');
+  protected readonly group = signal<RuleGroup | null>(null);
   protected readonly rules = signal<Rule[]>([]);
-  protected readonly groups = signal<readonly RuleGroup[]>([]);
   protected readonly templates = signal<readonly CommunicationTemplate[]>([]);
   protected readonly metrics = signal<readonly CustomerMetric[]>([]);
-  protected readonly query = signal(DEFAULT_RULE_LIST_FILTERS.query);
-  protected readonly statusFilter = signal<RuleStatusFilter>(DEFAULT_RULE_LIST_FILTERS.status);
-  protected readonly categoryFilter = signal<RuleCategoryFilter>(
-    DEFAULT_RULE_LIST_FILTERS.category,
-  );
+  protected readonly query = signal('');
   protected readonly pendingRuleId = signal<string | null>(null);
 
-  protected readonly statusFilterOptions = [
-    { id: RULE_FILTER_ALL, label: 'All' },
-    ...RULE_STATUSES.map((id) => ({ id, label: RULE_STATUS_LABELS[id] })),
-  ];
-
-  protected readonly categoryFilterOptions = [
-    { id: RULE_FILTER_ALL, label: 'All' },
-    ...RULE_CATEGORY_OPTIONS,
-  ];
-
-  private readonly filters = computed<RuleListFilters>(() => ({
-    query: this.query(),
-    status: this.statusFilter(),
-    category: this.categoryFilter(),
-  }));
+  protected readonly breadcrumbs = computed((): BreadcrumbItem[] => [
+    { label: 'Customer Engagement' },
+    { label: 'Rules', routerLink: '/engagement/rules' },
+    { label: this.group()?.name ?? 'Rule group' },
+  ]);
 
   private readonly templateNameById = computed(() => {
     const names = new Map<string, string>();
@@ -116,81 +97,92 @@ export class RulesListPage {
     return names;
   });
 
-  protected readonly counts = computed(() => ruleListCounts(this.rules()));
-  protected readonly groupCards = computed((): RuleGroupOverview[] =>
-    groupOverviews(this.groups(), this.rules()),
-  );
-  protected readonly filtered = computed(() => isRuleListFiltered(this.filters()));
-  protected readonly visibleRules = computed(() =>
-    filterRules(this.rules(), this.filters(), this.templateNameById()),
-  );
+  protected readonly groupRules = computed(() => rulesForGroup(this.rules(), this.groupId()));
 
-  protected readonly rows = computed((): RuleRow[] => {
+  protected readonly visibleRules = computed(() => {
+    const members = this.groupRules();
+    const query = this.query().trim();
+    if (!query) {
+      return members;
+    }
+    const filtered = filterRules(
+      members,
+      { query, status: RULE_FILTER_ALL, category: RULE_FILTER_ALL },
+      this.templateNameById(),
+    );
+    return rulesForGroup(filtered, this.groupId());
+  });
+
+  protected readonly rows = computed((): JourneyRow[] => {
     const metrics = this.metrics();
     const templateNames = this.templateNameById();
-    const categories = new Map(RULE_CATEGORY_OPTIONS.map((option) => [option.id, option.label]));
-    const groupNames = new Map(this.groups().map((group) => [group.id, group.name]));
 
-    return this.visibleRules().map((rule) => ({
-      rule,
-      categoryLabel: categories.get(rule.category) ?? rule.category,
-      groupLabel: groupNames.get(rule.groupId) ?? 'Ungrouped',
-      summary: summariseRule(rule, metrics),
-      templateName: templateNames.get(rule.templateId) ?? 'Unknown template',
-      updatedLabel: formatIsoDate(rule.updatedAt),
-      enableLabel: rule.status === 'active' ? 'Disable' : 'Enable',
-    }));
+    return this.visibleRules().map((rule) => {
+      const summary = summariseJourneyItem(rule, metrics);
+      return {
+        rule,
+        indexLabel: String(rule.sequenceOrder).padStart(2, '0'),
+        timing: summary.timing,
+        eligibility: summary.eligibility,
+        templateName: templateNames.get(rule.templateId) ?? 'Unknown template',
+        categoryLabel: RULE_CATEGORY_LABELS[rule.category] ?? rule.category,
+      };
+    });
   });
 
   constructor() {
-    this.load();
+    effect(() => {
+      const id = this.groupId();
+      untracked(() => {
+        if (id) {
+          this.load();
+        }
+      });
+    });
   }
 
   protected load(): void {
+    const id = this.groupId();
+    if (!id) {
+      this.loadState.set('not-found');
+      return;
+    }
+
     this.loadState.set('loading');
     forkJoin({
+      group: this.ruleGroupService.getById(id),
       rules: this.ruleService.list(),
-      groups: this.ruleGroupService.list(),
       templates: this.templateService.list(),
       metrics: this.metricCatalogService.list(),
     }).subscribe({
-      next: ({ rules, groups, templates, metrics }) => {
+      next: ({ group, rules, templates, metrics }) => {
+        this.group.set(group);
         this.rules.set(rules);
-        this.groups.set(groups);
         this.templates.set(templates);
         this.metrics.set(metrics);
         this.loadState.set('loaded');
       },
-      error: () => {
-        this.loadState.set('error');
+      error: (error: unknown) => {
+        const message = error instanceof Error ? error.message : '';
+        this.loadState.set(message.toLowerCase().includes('not found') ? 'not-found' : 'error');
       },
     });
   }
 
-  protected ruleCountLabel(count: number): string {
-    return count === 1 ? '1 rule' : `${count} rules`;
+  protected createRule(): void {
+    void this.router.navigate(['/engagement/rules/new'], {
+      queryParams: { group: this.groupId() },
+    });
   }
 
-  protected createRule(): void {
-    void this.router.navigate(['/engagement/rules/new']);
+  protected backToRules(): void {
+    void this.router.navigate(['/engagement/rules']);
   }
 
   protected editRule(rule: Rule): void {
-    void this.router.navigate(['/engagement/rules', rule.id]);
-  }
-
-  protected onStatusFilterChange(event: Event): void {
-    this.statusFilter.set((event.target as HTMLSelectElement).value as RuleStatusFilter);
-  }
-
-  protected onCategoryFilterChange(event: Event): void {
-    this.categoryFilter.set((event.target as HTMLSelectElement).value as RuleCategoryFilter);
-  }
-
-  protected clearFilters(): void {
-    this.query.set(DEFAULT_RULE_LIST_FILTERS.query);
-    this.statusFilter.set(DEFAULT_RULE_LIST_FILTERS.status);
-    this.categoryFilter.set(DEFAULT_RULE_LIST_FILTERS.category);
+    void this.router.navigate(['/engagement/rules', rule.id], {
+      queryParams: { fromGroup: this.groupId() },
+    });
   }
 
   protected duplicate(rule: Rule): void {
@@ -237,18 +229,14 @@ export class RulesListPage {
     request.subscribe({
       next: () => {
         this.pendingRuleId.set(null);
-        this.refreshRules();
+        this.ruleService.list().subscribe({
+          next: (rules) => this.rules.set(rules),
+          error: () => this.loadState.set('error'),
+        });
       },
       error: () => {
         this.pendingRuleId.set(null);
       },
-    });
-  }
-
-  private refreshRules(): void {
-    this.ruleService.list().subscribe({
-      next: (rules) => this.rules.set(rules),
-      error: () => this.loadState.set('error'),
     });
   }
 }

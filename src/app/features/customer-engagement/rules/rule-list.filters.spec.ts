@@ -11,12 +11,15 @@ const templates = new Map<string, string>([
   ['welcome-onboarding', 'Welcome / onboarding'],
   ['trial-expiry-reminder', 'Trial expiry reminder'],
   ['feature-announcement', 'Feature announcement'],
+  ['inactivity-reengagement', 'Inactivity / re-engagement'],
 ]);
 
 function rule(overrides: Partial<Rule> & Pick<Rule, 'id' | 'name'>): Rule {
   return {
     description: '',
     category: 'onboarding',
+    groupId: 'rg_trial_onboarding',
+    sequenceOrder: 1,
     status: 'active',
     rootGroup: { id: 'g', combinator: 'and', children: [] },
     templateId: 'welcome-onboarding',
@@ -102,6 +105,43 @@ describe('filterRules', () => {
         (item) => item.id,
       ),
     ).toEqual(['2']);
+  });
+
+  it('searches across groups rather than the current group only', () => {
+    const mixed = [
+      rule({
+        id: '1',
+        name: 'Welcome to Portal Genie',
+        groupId: 'rg_trial_onboarding',
+        templateId: 'welcome-onboarding',
+      }),
+      rule({
+        id: 'inactive',
+        name: 'Inactive for 14 Days',
+        category: 'engagement',
+        groupId: 'rg_engagement',
+        sequenceOrder: 1,
+        templateId: 'inactivity-reengagement',
+      }),
+      rule({
+        id: '3',
+        name: 'New Feature Announcement',
+        category: 'announcement',
+        groupId: 'rg_announcements',
+        templateId: 'feature-announcement',
+      }),
+    ];
+
+    expect(
+      filterRules(mixed, { ...DEFAULT_RULE_LIST_FILTERS, query: 'inactive' }, templates).map(
+        (item) => item.id,
+      ),
+    ).toEqual(['inactive']);
+    expect(
+      filterRules(mixed, { ...DEFAULT_RULE_LIST_FILTERS, query: 'welcome' }, templates).map(
+        (item) => item.id,
+      ),
+    ).toEqual(['1']);
   });
 
   it('combines search with status and category filters', () => {

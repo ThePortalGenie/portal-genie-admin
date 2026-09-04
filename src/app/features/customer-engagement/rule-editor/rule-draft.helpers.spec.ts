@@ -1,5 +1,6 @@
 import { describe, expect, it } from 'vitest';
-import { draftsAreEqual, emptyRuleDraft } from './rule-draft.helpers';
+import { RULE_FIXTURES } from '../../../core/data/mock/fixtures/rules.fixture';
+import { draftsAreEqual, draftFromRule, emptyRuleDraft } from './rule-draft.helpers';
 
 describe('emptyRuleDraft', () => {
   it('defaults a new rule to Disabled', () => {
@@ -13,6 +14,8 @@ describe('emptyRuleDraft', () => {
     expect(draft.rootGroup.combinator).toBe('and');
     expect(draft.rootGroup.children).toHaveLength(1);
     expect(draft.timing.mode).toBe('on_match');
+    expect(draft.groupId).toBe('');
+    expect(draft.sequenceOrder).toBeNull();
   });
 });
 
@@ -22,5 +25,16 @@ describe('draftsAreEqual', () => {
     const edited = { ...original, name: 'Welcome' };
     expect(draftsAreEqual(original, original)).toBe(true);
     expect(draftsAreEqual(original, edited)).toBe(false);
+  });
+});
+
+describe('draftFromRule', () => {
+  it('preserves group and sequence when editing', () => {
+    const source = RULE_FIXTURES.find((rule) => rule.id === 'rule_trial_7');
+    expect(source).toBeDefined();
+    const draft = draftFromRule(source!);
+    expect(draft.groupId).toBe('rg_trial_onboarding');
+    expect(draft.sequenceOrder).toBe(6);
+    expect(draft.category).toBe('conversion');
   });
 });

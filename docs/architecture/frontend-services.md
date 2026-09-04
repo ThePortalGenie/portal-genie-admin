@@ -16,12 +16,21 @@ No service in this list sends email, talks to Postmark, evaluates customer popul
 
 - List rules (for the table; filtering may be client-side in v1)
 - Get one rule by id
-- Duplicate a rule (`duplicate(id)` — used by the Rules list; copies are Disabled)
+- Duplicate a rule (`duplicate(id)` — used by the Rules list; copies are Disabled and stay in the same group at the end of that group’s display order)
 - Create / update from `RuleDraft`
 - Set status (active / disabled)
 - Delete
 
-**Does not own:** templates, metric definitions, customer lists, evaluation, execution, delivery, communication history.
+**Does not own:** templates, metric definitions, customer lists, evaluation, execution, delivery, communication history, rule group catalog.
+
+### RuleGroupService
+
+**Owns:** the extensible **rule group** catalog (journeys such as Trial & Onboarding). Separate from rule categories.
+
+- List groups
+- Get one by id
+
+Presentation never imports mock fixtures. Groups and `sequenceOrder` are organisational metadata only; this service does not evaluate or orchestrate journeys.
 
 ### TemplateService
 
@@ -101,10 +110,12 @@ src/app/
       # trial/account enum values live with the metric catalog fixtures — not in components
     data/
       rule.service.ts              # abstract
+      rule-group.service.ts
       template.service.ts
       metric-catalog.service.ts
       mock/
         mock-rule.service.ts
+        mock-rule-group.service.ts
         mock-template.service.ts
         mock-metric-catalog.service.ts
         fixtures/                  # JSON/TS fixtures, not used by components
@@ -122,6 +133,8 @@ src/app/
         rule-summary.ts
       rules/
         rules-list.page.ts
+        rule-group.page.ts
+        rule-group.helpers.ts
       rule-editor/
         rule-editor.page.ts
         condition-row.ts

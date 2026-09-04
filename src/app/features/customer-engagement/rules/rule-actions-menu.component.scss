@@ -1,0 +1,83 @@
+:host {
+  display: inline-flex;
+}
+
+.rule-actions {
+  display: flex;
+  flex-wrap: wrap;
+  align-items: center;
+  justify-content: flex-end;
+  gap: var(--space-1);
+}
+
+.overflow {
+  position: relative;
+}
+
+.overflow__summary {
+  display: inline-flex;
+  align-items: center;
+  min-height: var(--control-height-compact);
+  padding: 0 var(--space-3);
+  border-radius: var(--radius-control);
+  color: var(--portal-navy);
+  font: inherit;
+  font-weight: var(--font-weight-medium);
+  cursor: pointer;
+  list-style: none;
+}
+
+.overflow__summary::-webkit-details-marker {
+  display: none;
+}
+
+.overflow__summary:hover {
+  background: rgb(0 119 190 / 8%);
+}
+
+.overflow__summary:focus-visible {
+  outline: var(--focus-ring);
+  outline-offset: var(--focus-offset);
+}
+
+.overflow__menu {
+  position: absolute;
+  right: 0;
+  z-index: 3;
+  min-width: 10rem;
+  padding: var(--space-1);
+  border: 1px solid var(--color-border);
+  border-radius: var(--radius-control);
+  background: var(--color-surface);
+}
+
+.overflow__menu button {
+  display: block;
+  width: 100%;
+  padding: var(--space-2) var(--space-3);
+  border: 0;
+  border-radius: calc(var(--radius-control) - 2px);
+  background: transparent;
+  color: var(--portal-navy);
+  font: inherit;
+  text-align: left;
+  cursor: pointer;
+}
+
+.overflow__menu button:hover:not(:disabled) {
+  background: rgb(0 119 190 / 8%);
+}
+
+.overflow__menu button:focus-visible {
+  outline: var(--focus-ring);
+  outline-offset: var(--focus-offset);
+}
+
+.overflow__menu button:disabled {
+  opacity: 0.5;
+  cursor: not-allowed;
+}
+
+.overflow__danger {
+  color: var(--color-destructive);
+}

@@ -74,6 +74,22 @@ export const TEMPLATE_FIXTURES: readonly CommunicationTemplate[] = [
     available: true,
   },
   {
+    id: 'product-update',
+    name: 'Product update',
+    category: 'announcement',
+    purpose: 'Share a general Portal Genie product update with eligible customers.',
+    lifecycleStage: 'Any eligible segment',
+    available: true,
+  },
+  {
+    id: 'long-term-reengagement',
+    name: 'Long-term re-engagement',
+    category: 'inactivity',
+    purpose: 'Re-engage customers after a longer period without a portal sign-in.',
+    lifecycleStage: 'Quiet for two months or more',
+    available: true,
+  },
+  {
     id: 'product-adoption',
     name: 'Product adoption',
     category: 'announcement',
