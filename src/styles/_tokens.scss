@@ -1,0 +1,103 @@
+// Design tokens for Portal Genie Admin.
+// Brand Guide colours are labelled. All other values are project UI conventions
+// (docs/BRAND_AND_DESIGN.md) unless noted.
+
+:root {
+  // --- Brand Guide palette (authoritative) ---
+  --portal-navy: #112136;
+  --portal-blue: #0077be;
+  --portal-teal: #00beb9;
+  --portal-forest: #12403c;
+  --portal-grey: #b7bcc2;
+  --portal-magenta: #6e0357;
+  --portal-off-white: #fafbfb;
+  --portal-steel: #365c8d;
+
+  // --- Surfaces (UI convention; not Brand Guide swatches) ---
+  --color-surface: #ffffff;
+  --color-inverse: #ffffff;
+  --color-canvas: var(--portal-off-white);
+  --color-text: var(--portal-navy);
+  --color-text-muted: rgb(17 33 54 / 75%);
+  --color-border: rgb(183 188 194 / 40%);
+  --color-border-strong: var(--portal-grey);
+
+  // Warning Gold — project UI convention, not a Brand Guide colour
+  --color-warning: #b8860b;
+
+  --color-primary: var(--portal-blue);
+  --color-primary-hover: #0066a3;
+  --color-destructive: var(--portal-magenta);
+  --color-destructive-hover: #5a0448;
+  --color-focus: var(--portal-blue);
+
+  // --- Typography (UI convention: Inter + system fallbacks; Brand Guide does not specify a UI face) ---
+  --font-sans: Inter, "Segoe UI", system-ui, -apple-system, "Helvetica Neue", Arial, sans-serif;
+  --font-size-caption: 0.75rem; // 12px
+  --font-size-body: 0.875rem; // 14px
+  --font-size-h2: 1.125rem; // 18px
+  --font-size-h1: 1.5rem; // 24px
+  --line-height-body: 1.4286; // 20px at 14px
+  --line-height-tight: 1.25;
+  --font-weight-regular: 400;
+  --font-weight-medium: 500;
+  --font-weight-semibold: 600;
+  --letter-spacing-tight: -0.02em;
+
+  // --- Spacing (4px base — UI convention) ---
+  --space-1: 0.25rem;
+  --space-2: 0.5rem;
+  --space-3: 0.75rem;
+  --space-4: 1rem;
+  --space-5: 1.25rem;
+  --space-6: 1.5rem;
+  --space-8: 2rem;
+  --space-10: 2.5rem;
+  --space-12: 3rem;
+
+  --page-padding: var(--space-6);
+  --page-padding-narrow: var(--space-4);
+  --page-header-gap: var(--space-6);
+
+  // --- Radius (UI convention) ---
+  --radius-control: 0.75rem; // 12px buttons, inputs
+  --radius-card: 1rem; // 16px cards, dialogs
+  --radius-pill: 999px;
+
+  // --- Control sizes (UI convention) ---
+  --control-height: 2.5rem; // 40px
+  --control-height-compact: 2rem; // 32px
+  --control-padding-x: var(--space-4);
+
+  // --- Layout (UI convention) ---
+  --sidebar-width: 15rem; // 240px
+  --topbar-height: 3.5rem; // 56px
+  --form-max-width: 50rem; // 800px
+  --content-max-width: 75rem;
+
+  // --- Elevation (UI convention: prefer borders) ---
+  --shadow-card: 0 8px 24px -8px rgb(17 33 54 / 8%);
+  --shadow-dialog: 0 16px 40px -12px rgb(17 33 54 / 18%);
+
+  // --- Focus (UI convention) ---
+  --focus-ring: 2px solid var(--color-focus);
+  --focus-offset: 2px;
+
+  // --- Motion (UI convention) ---
+  --duration-fast: 160ms;
+  --ease-standard: ease;
+
+  // --- Breakpoints documented for JS/CSS alignment (UI convention) ---
+  // 640px  narrow stacking
+  // 1024px sidebar becomes a drawer below this
+  // 1280px primary desktop workspace
+  --bp-narrow: 40rem;
+  --bp-tablet: 64rem;
+  --bp-desktop: 80rem;
+}
+
+@media (max-width: 63.99rem) {
+  :root {
+    --page-padding: var(--page-padding-narrow);
+  }
+}

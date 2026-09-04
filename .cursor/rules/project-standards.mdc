@@ -1,0 +1,42 @@
+---
+description: Core project standards for Portal Genie Admin — scope, quality, structure, and frontend-only boundary
+alwaysApply: true
+---
+
+# Portal Genie Admin — Project Standards
+
+Internal Angular admin app for The Portal Genie. Official product name: **The Portal Genie**. App name: **Portal Genie Admin**.
+
+Before implementing, read `README.md`, `docs/BRAND_AND_DESIGN.md`, and the relevant file in `docs/features/`.
+
+## Scope
+
+- This repository is **frontend only**.
+- Do not implement backends, databases, auth servers, Postmark, or email sending.
+- Where a backend will be needed, define TypeScript interfaces and service abstractions. Use mock/fixture adapters behind those interfaces until APIs exist.
+- Do not hard-code data that will come from APIs. Seed data belongs in mock adapters, not in components.
+
+## Quality
+
+- Production-quality TypeScript. Prefer explicit types; avoid `any`.
+- Small, focused, reusable components. Separate presentation, business logic, and data access.
+- No unnecessary dependencies. Do not add libraries when Angular already covers the need.
+- Accessible, responsive, and keyboard-usable UI. Every list/detail view needs loading, empty, and error states.
+- Forms use Angular reactive forms with visible validation. Never rely on placeholder text as the only label.
+
+## Structure and naming
+
+Target a feature-based Angular layout once the app is generated:
+
+- `core/` — singleton services, interceptors, configuration
+- `shared/` — reusable UI and utilities with no feature coupling
+- `features/<name>/` — routes, pages, feature components, feature services
+- `layout/` — shell, navigation, page frame
+
+Files: kebab-case. Classes: PascalCase. Services end with `Service`. Models/interfaces live in `*.model.ts` or `*.types.ts`.
+
+## Modules
+
+- **Customer Engagement** is the first feature. Follow `docs/features/customer-engagement.md`.
+- **Customer Usage** is documented only. Do not design or implement it until requested.
+- Keep features modular. Share customer metric types via contracts, not by coupling UIs.

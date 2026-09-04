@@ -1,0 +1,185 @@
+<app-page-header
+  title="Rules"
+  description="Manage automated customer engagement rules based on customer behaviour and lifecycle events."
+  [breadcrumbs]="breadcrumbs"
+>
+  <ui-button (click)="createRule()">Create Rule</ui-button>
+</app-page-header>
+
+@switch (loadState()) {
+  @case ('loading') {
+    <p class="rules-status" aria-live="polite" aria-busy="true">Loading rules…</p>
+  }
+  @case ('error') {
+    <ui-error-state
+      title="Rules could not be loaded"
+      message="The rules list is unavailable right now. Try again."
+      (retry)="load()"
+    />
+  }
+  @default {
+    @if (rules().length === 0) {
+      <ui-empty-state
+        title="No engagement rules yet"
+        message="Create your first rule to start defining automated customer communications."
+      >
+        <ui-button (click)="createRule()">Create Rule</ui-button>
+      </ui-empty-state>
+    } @else {
+      <section class="overview" aria-label="Rule configuration overview">
+        <div class="overview__item">
+          <span class="overview__label">Total rules</span>
+          <span class="overview__value">{{ counts().total }}</span>
+        </div>
+        <div class="overview__item">
+          <span class="overview__label">Active</span>
+          <span class="overview__value">{{ counts().active }}</span>
+        </div>
+        <div class="overview__item">
+          <span class="overview__label">Disabled</span>
+          <span class="overview__value">{{ counts().disabled }}</span>
+        </div>
+      </section>
+
+      <div class="toolbar">
+        <ui-search-field
+          class="toolbar__search"
+          label="Search"
+          placeholder="Search by name, description, or template"
+          [value]="query()"
+          (valueChange)="query.set($event)"
+        />
+
+        <div class="toolbar__field">
+          <label class="toolbar__label" for="rule-status-filter">Status</label>
+          <select
+            id="rule-status-filter"
+            class="toolbar__select"
+            [value]="statusFilter()"
+            (change)="onStatusFilterChange($event)"
+          >
+            @for (option of statusFilterOptions; track option.id) {
+              <option [value]="option.id">{{ option.label }}</option>
+            }
+          </select>
+        </div>
+
+        <div class="toolbar__field">
+          <label class="toolbar__label" for="rule-category-filter">Category</label>
+          <select
+            id="rule-category-filter"
+            class="toolbar__select"
+            [value]="categoryFilter()"
+            (change)="onCategoryFilterChange($event)"
+          >
+            @for (option of categoryFilterOptions; track option.id) {
+              <option [value]="option.id">{{ option.label }}</option>
+            }
+          </select>
+        </div>
+
+        @if (filtered()) {
+          <ui-button class="toolbar__clear" variant="ghost" (click)="clearFilters()">
+            Clear filters
+          </ui-button>
+        }
+      </div>
+
+      @if (filtered()) {
+        <p class="filter-note" aria-live="polite">
+          Showing {{ rows().length }} of {{ rules().length }} rules.
+        </p>
+      }
+
+      @if (rows().length === 0) {
+        <ui-empty-state
+          title="No rules match your search or filters"
+          message="Try a different search term, or clear the current filters to see all rules."
+        >
+          <ui-button variant="secondary" (click)="clearFilters()">Clear filters</ui-button>
+        </ui-empty-state>
+      } @else {
+        <div class="table-scroll" tabindex="0" role="region" aria-label="Rules">
+          <table class="rules-table">
+            <thead>
+              <tr>
+                <th scope="col">Rule</th>
+                <th scope="col">Category</th>
+                <th scope="col">Trigger / conditions</th>
+                <th scope="col">Communication</th>
+                <th scope="col">Status</th>
+                <th scope="col">Updated</th>
+                <th scope="col">Actions</th>
+              </tr>
+            </thead>
+            <tbody>
+              @for (row of rows(); track row.rule.id) {
+                <tr>
+                  <th scope="row">
+                    <a class="rule-name" [routerLink]="['/engagement/rules', row.rule.id]">
+                      {{ row.rule.name }}
+                    </a>
+                    @if (row.rule.description) {
+                      <p class="rule-description">{{ row.rule.description }}</p>
+                    }
+                  </th>
+                  <td>{{ row.categoryLabel }}</td>
+                  <td>
+                    <span class="summary" [title]="row.summary">{{ row.summary }}</span>
+                  </td>
+                  <td>{{ row.templateName }}</td>
+                  <td>
+                    <ui-status-badge [status]="row.rule.status" />
+                  </td>
+                  <td>{{ row.updatedLabel }}</td>
+                  <td>
+                    <div class="row-actions">
+                      <ui-button
+                        variant="ghost"
+                        size="compact"
+                        [ariaLabel]="'Edit ' + row.rule.name"
+                        [disabled]="pendingRuleId() === row.rule.id"
+                        (click)="editRule(row.rule)"
+                      >
+                        Edit
+                      </ui-button>
+                      <ui-button
+                        variant="ghost"
+                        size="compact"
+                        [ariaLabel]="'Duplicate ' + row.rule.name"
+                        [disabled]="pendingRuleId() === row.rule.id"
+                        (click)="duplicate(row.rule)"
+                      >
+                        Duplicate
+                      </ui-button>
+                      <ui-button
+                        variant="ghost"
+                        size="compact"
+                        [ariaLabel]="row.enableLabel + ' ' + row.rule.name"
+                        [disabled]="pendingRuleId() === row.rule.id"
+                        (click)="toggleStatus(row.rule)"
+                      >
+                        {{ row.enableLabel }}
+                      </ui-button>
+                      <ui-button
+                        variant="ghost"
+                        size="compact"
+                        [ariaLabel]="'Delete ' + row.rule.name"
+                        [disabled]="pendingRuleId() === row.rule.id"
+                        (click)="deleteRule(row.rule)"
+                      >
+                        Delete
+                      </ui-button>
+                    </div>
+                  </td>
+                </tr>
+              }
+            </tbody>
+          </table>
+        </div>
+      }
+    }
+  }
+}
+
+<ui-confirm-dialog />

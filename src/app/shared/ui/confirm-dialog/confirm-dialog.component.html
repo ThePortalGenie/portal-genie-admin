@@ -1,0 +1,23 @@
+<dialog
+  #dialogEl
+  class="confirm-dialog"
+  aria-labelledby="confirm-dialog-title"
+  aria-describedby="confirm-dialog-message"
+  (close)="onClose()"
+>
+  @if (request(); as dialogRequest) {
+    <h2 id="confirm-dialog-title" class="confirm-dialog__title">{{ dialogRequest.title }}</h2>
+    <p id="confirm-dialog-message" class="confirm-dialog__message">{{ dialogRequest.message }}</p>
+    <div class="confirm-dialog__actions">
+      <ui-button variant="secondary" (click)="dismiss()">
+        {{ dialogRequest.cancelLabel }}
+      </ui-button>
+      <ui-button
+        [variant]="dialogRequest.destructive ? 'destructive' : 'primary'"
+        (click)="accept()"
+      >
+        {{ dialogRequest.confirmLabel }}
+      </ui-button>
+    </div>
+  }
+</dialog>

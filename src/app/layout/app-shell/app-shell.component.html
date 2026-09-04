@@ -1,0 +1,40 @@
+<div class="shell">
+  <a class="skip-link" href="#main-content">Skip to main content</a>
+
+  @if (isNarrow() && sidebarOpen()) {
+    <button
+      class="shell__scrim"
+      type="button"
+      aria-label="Close navigation"
+      (click)="closeSidebar()"
+    ></button>
+  }
+
+  <app-sidebar
+    [open]="!isNarrow() || sidebarOpen()"
+    [asDrawer]="isNarrow()"
+    (closeNav)="closeSidebar()"
+  />
+
+  <div class="shell__main">
+    @if (isNarrow()) {
+      <header class="shell__topbar">
+        <button
+          class="shell__menu"
+          type="button"
+          [attr.aria-expanded]="sidebarOpen()"
+          aria-controls="app-sidebar"
+          (click)="toggleSidebar()"
+        >
+          <span class="shell__menu-icon" aria-hidden="true"></span>
+          <span class="shell__menu-label">Menu</span>
+        </button>
+        <p class="shell__topbar-title">Portal Genie Admin</p>
+      </header>
+    }
+
+    <main id="main-content" class="shell__content" tabindex="-1">
+      <router-outlet />
+    </main>
+  </div>
+</div>

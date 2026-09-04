@@ -1,0 +1,45 @@
+---
+description: Angular, TypeScript, and UI architecture conventions for Portal Genie Admin
+globs: **/*.{ts,html,scss,css}
+alwaysApply: false
+---
+
+# Angular Architecture
+
+Use current Angular with **standalone components**, **signals**, `inject()`, and the built-in control flow (`@if`, `@for`, `@switch`). Do not introduce NgModules for new feature code.
+
+## Layers
+
+- **Pages** compose feature UI and wire to services. They do not call HTTP directly.
+- **Presentational components** receive inputs and emit outputs. No data-access services.
+- **Domain/facade services** hold feature logic (rule validation, condition building).
+- **Data services** implement interfaces such as `EngagementRuleRepository`. Swap mock adapters for HTTP later without changing UI.
+
+```typescript
+// ✅ GOOD — UI depends on a contract
+export abstract class EngagementRuleRepository {
+  abstract list(): Observable<EngagementRule[]>;
+  abstract save(rule: EngagementRuleDraft): Observable<EngagementRule>;
+}
+
+// ❌ BAD — component hard-codes records or fetch URLs
+```
+
+## State and typing
+
+- Model server payloads as TypeScript interfaces. Do not invent database schemas.
+- Use strictly typed reactive forms. Keep validators close to the domain (including real-time rule validation).
+- Derive view state with signals/computed values. Do not duplicate source-of-truth data in the template.
+
+## UI behaviour
+
+- One reusable control per pattern (button, input, select, toggle, card, table, empty state). Style via the brand tokens in `docs/BRAND_AND_DESIGN.md`.
+- Every async view: loading, empty, error, and success. Errors must be actionable.
+- Validate on change as well as on submit. Block save while a rule is invalid.
+- Responsive from tablet-up as a full admin workspace; collapse navigation on smaller screens. Do not ship a desktop-only layout.
+
+## Do not
+
+- Mix feature logic into shared UI primitives.
+- Import Customer Usage screens into Engagement (the usage module does not exist yet).
+- Add state libraries unless the team explicitly agrees they are required.

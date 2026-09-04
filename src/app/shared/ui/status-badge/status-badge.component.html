@@ -1,0 +1,8 @@
+<span
+  class="ui-status-badge"
+  [class.ui-status-badge--active]="status() === 'active'"
+  [class.ui-status-badge--disabled]="status() === 'disabled'"
+>
+  <span class="ui-status-badge__mark" aria-hidden="true"></span>
+  {{ labels[status()] }}
+</span>

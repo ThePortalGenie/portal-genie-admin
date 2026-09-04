@@ -1,0 +1,150 @@
+:host {
+  display: block;
+}
+
+.rules-status {
+  color: var(--color-text-muted);
+}
+
+.overview {
+  display: flex;
+  flex-wrap: wrap;
+  gap: var(--space-6);
+  margin-bottom: var(--space-5);
+}
+
+.overview__item {
+  display: flex;
+  align-items: baseline;
+  gap: var(--space-2);
+}
+
+.overview__label {
+  color: var(--color-text-muted);
+}
+
+.overview__value {
+  font-weight: var(--font-weight-semibold);
+}
+
+.toolbar {
+  display: flex;
+  flex-wrap: wrap;
+  align-items: flex-end;
+  gap: var(--space-3);
+  margin-bottom: var(--space-4);
+}
+
+.toolbar__search {
+  flex: 1 1 16rem;
+  min-width: 12rem;
+}
+
+.toolbar__field {
+  display: flex;
+  flex-direction: column;
+  gap: var(--space-1);
+  min-width: 10rem;
+}
+
+.toolbar__label {
+  font-size: var(--font-size-caption);
+  font-weight: var(--font-weight-medium);
+  color: var(--color-text-muted);
+}
+
+.toolbar__select {
+  min-height: var(--control-height);
+  padding: 0 var(--control-padding-x);
+  border: 1px solid var(--color-border-strong);
+  border-radius: var(--radius-control);
+  background: var(--color-surface);
+  color: var(--color-text);
+  font: inherit;
+}
+
+.toolbar__select:focus-visible {
+  outline: var(--focus-ring);
+  outline-offset: var(--focus-offset);
+}
+
+.toolbar__clear {
+  margin-bottom: 1px;
+}
+
+.filter-note {
+  margin-bottom: var(--space-3);
+  color: var(--color-text-muted);
+}
+
+.table-scroll {
+  overflow-x: auto;
+  border: 1px solid var(--color-border);
+  border-radius: var(--radius-card);
+  background: var(--color-surface);
+}
+
+.rules-table {
+  width: 100%;
+  min-width: 56rem;
+  border-collapse: collapse;
+}
+
+.rules-table th,
+.rules-table td {
+  padding: var(--space-3) var(--space-4);
+  text-align: left;
+  vertical-align: top;
+  border-bottom: 1px solid var(--color-border);
+}
+
+.rules-table thead th {
+  font-size: var(--font-size-caption);
+  font-weight: var(--font-weight-semibold);
+  color: var(--portal-navy);
+  background: var(--color-surface);
+}
+
+.rules-table tbody th {
+  font-weight: var(--font-weight-regular);
+}
+
+.rules-table tbody tr:last-child th,
+.rules-table tbody tr:last-child td {
+  border-bottom: 0;
+}
+
+.rules-table tbody tr:hover {
+  background: rgb(0 119 190 / 5%);
+}
+
+.rule-name {
+  font-weight: var(--font-weight-semibold);
+  color: var(--portal-navy);
+  text-decoration: none;
+}
+
+.rule-name:hover {
+  color: var(--portal-blue);
+  text-decoration: underline;
+}
+
+.rule-description {
+  margin-top: var(--space-1);
+  color: var(--color-text-muted);
+}
+
+.summary {
+  display: inline-block;
+  max-width: 18rem;
+  overflow: hidden;
+  text-overflow: ellipsis;
+  white-space: nowrap;
+}
+
+.row-actions {
+  display: flex;
+  flex-wrap: wrap;
+  justify-content: flex-end;
+  gap: var(--space-1);
+}

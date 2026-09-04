@@ -1,0 +1,37 @@
+---
+description: Portal Genie brand and admin UI design rules derived from the Brand Guide
+alwaysApply: true
+---
+
+# Brand and Design Rules
+
+Follow `docs/BRAND_AND_DESIGN.md`. The Brand Guide (`Portal Genie Brand Guide.docx`) is the colour and logo source of truth. Do not invent primary colours.
+
+## Colours (from the Brand Guide)
+
+| Token | Hex | Use |
+| --- | --- | --- |
+| Portal Navy | `#112136` | Headings, shell, primary text, dark surfaces |
+| Portal Blue | `#0077BE` | Primary actions, links, focus, active states |
+| Portal Teal | `#00BEB9` | Sparse accent, success, icons |
+| Portal Forest | `#12403C` | Positive/success on dark or as a deep complement |
+| Portal Grey | `#B7BCC2` | Borders, dividers, muted UI |
+| Portal Magenta | `#6E0357` | Emphasis, destructive/alert |
+| Portal Off-White | `#FAFBFB` | Page background |
+| Portal Steel | `#365C8D` | Secondary navy, charts, supporting text on dark |
+
+White `#FFFFFF` is for cards and elevated surfaces only. Logo gradient is for the mark, not large UI fills.
+
+## UI conventions (admin, not marketing)
+
+- Typeface: **Inter**, then system sans-serif. Sentence case for UI headings. All-caps is for the logo wordmark only.
+- Primary button: Portal Blue, white text, 12px radius. Secondary: white, navy text, grey border.
+- Cards: white, soft grey border, 16px radius, little or no shadow.
+- Inputs: 12px radius, visible labels, Portal Blue focus ring.
+- Sidebar/shell: Portal Navy. Content canvas: Off-White.
+- Icons: one outlined set (Lucide). Do not mix icon families.
+- Prefer borders over shadows. No glassmorphism, heavy glow, or decorative illustration.
+
+## Accessibility
+
+Contrast must meet WCAG 2.2 AA. Focus rings are visible (Portal Blue, 2px). Support keyboard use and `prefers-reduced-motion`.

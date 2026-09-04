@@ -1,0 +1,34 @@
+---
+description: Customer Engagement feature scope, rule model, and implementation boundaries
+alwaysApply: true
+---
+
+# Customer Engagement
+
+First product module. Spec: `docs/features/customer-engagement.md`. UX and approved decisions: `docs/architecture/`. Usage: `docs/features/customer-usage.md` (do not build yet).
+
+## Purpose
+
+Administrators author **rule definitions**: eligibility, template, timing, status. Real-time validation is required. Recipient preview is out of scope.
+
+v1 intended send behaviour (backend, not Angular): **once per customer per qualifying occurrence**. Do not implement evaluation, deduplication, send history, or email.
+
+## Build in the frontend
+
+- Rule list and editor (v1: one AND/OR group; nested groups in the model only).
+- Extensible metric catalog and separate **rule** category catalog.
+- Read-only system template **selection** (not an email composer; no create/edit/activate).
+- Timing: on match, or X days before/after catalog lifecycle anchors.
+- Save-blocking validation. Mock services behind contracts.
+
+## Do not build
+
+- Email sending, Postmark, evaluation of customers, scheduling, or delivery.
+- Customer targeting / recipient preview.
+- Customer Usage dashboards or “coming soon” nav.
+- Frequency / cooldown / re-entry / history UI.
+- Database schemas or backend workflows.
+
+## Architecture
+
+Share metric contracts so Usage can later display the same signals. Keep trial/account enum values **centralised** as temporary mock contracts. Condition fields and rule categories are catalog-driven.

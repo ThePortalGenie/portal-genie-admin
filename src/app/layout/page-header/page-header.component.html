@@ -1,0 +1,14 @@
+<header class="page-header">
+  @if (breadcrumbs().length) {
+    <app-breadcrumb [items]="breadcrumbs()" />
+  }
+  <div class="page-header__row">
+    <h1 class="page-header__title">{{ title() }}</h1>
+    <div class="page-header__actions">
+      <ng-content />
+    </div>
+  </div>
+  @if (description()) {
+    <p class="page-header__description">{{ description() }}</p>
+  }
+</header>
