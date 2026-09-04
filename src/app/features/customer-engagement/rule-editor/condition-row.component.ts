@@ -16,7 +16,7 @@ import {
   displayNumericInput,
   parseNumericInput,
 } from './numeric-input';
-import { booleanValueLabels, EDITOR_OPERATOR_LABELS, metricEditorLabel } from './metric-display';
+import { booleanValueLabels, EDITOR_OPERATOR_LABELS, metricEditorLabel, metricSelectorLabel } from './metric-display';
 import {
   defaultLifecycleDirection,
   isLifecycleTimingMetric,
@@ -58,6 +58,15 @@ export class ConditionRow {
 
   protected metricLabel(metric: CustomerMetric): string {
     return metricEditorLabel(metric);
+  }
+
+  protected selectorLabel(metric: CustomerMetric): string {
+    return metricSelectorLabel(metric);
+  }
+
+  protected selectorTitle(): string | null {
+    const selected = this.selectedMetric();
+    return selected ? metricSelectorLabel(selected) : null;
   }
 
   protected booleanLabels(): { yes: string; no: string } {

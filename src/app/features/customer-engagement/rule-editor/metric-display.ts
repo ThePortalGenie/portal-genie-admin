@@ -42,6 +42,13 @@ export function metricEditorLabel(metric: CustomerMetric): string {
   return METRIC_EDITOR_LABELS[metric.key] ?? metric.displayName;
 }
 
+/** Option text for the metric selector. Descriptions are discovery-only. */
+export function metricSelectorLabel(metric: CustomerMetric): string {
+  const name = metricEditorLabel(metric);
+  const description = metric.description?.trim();
+  return description ? `${name} (${description})` : name;
+}
+
 export function booleanValueLabels(metricKey: string): { yes: string; no: string } {
   return BOOLEAN_VALUE_LABELS[metricKey] ?? { yes: 'Yes', no: 'No' };
 }

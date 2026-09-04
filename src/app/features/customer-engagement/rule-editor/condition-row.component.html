@@ -12,6 +12,7 @@
       [id]="'metric-' + fieldId()"
       [class.pg-control--error]="!!showIssue('metricKey')"
       [attr.aria-invalid]="!!showIssue('metricKey')"
+      [attr.title]="selectorTitle()"
       formControlName="metricKey"
       (change)="onMetricChange()"
     >
@@ -19,7 +20,7 @@
       @for (group of groupedMetrics(); track group.id) {
         <optgroup [label]="group.label">
           @for (item of group.metrics; track item.key) {
-            <option [value]="item.key">{{ metricLabel(item) }}</option>
+            <option [value]="item.key">{{ selectorLabel(item) }}</option>
           }
         </optgroup>
       }

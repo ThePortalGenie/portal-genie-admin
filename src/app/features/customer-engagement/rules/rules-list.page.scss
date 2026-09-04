@@ -108,18 +108,27 @@
 
 .group-grid {
   display: grid;
-  grid-template-columns: repeat(auto-fill, minmax(16rem, 1fr));
+  grid-template-columns: repeat(auto-fit, minmax(min(100%, 18rem), 1fr));
   gap: var(--space-4);
 }
 
 .group-card {
   display: flex;
   flex-direction: column;
-  min-height: 100%;
+  min-width: 0;
+  height: 100%;
   padding: var(--space-5);
   border: 1px solid var(--color-border);
   border-radius: var(--radius-card);
   background: var(--color-surface);
+  overflow-wrap: break-word;
+}
+
+.group-card__kicker {
+  margin: 0 0 var(--space-2);
+  font-size: var(--font-size-caption);
+  font-weight: var(--font-weight-medium);
+  color: var(--portal-blue);
 }
 
 .group-card__title {
@@ -127,10 +136,20 @@
   font-size: var(--font-size-h2);
 }
 
-.group-card__description,
+.group-card__description {
+  margin: 0;
+  color: var(--color-text-muted);
+}
+
+.group-card__meta {
+  margin-top: auto;
+  padding-top: var(--space-4);
+}
+
 .group-card__span,
 .group-card__counts {
   margin: 0 0 var(--space-2);
+  min-height: 1.25rem;
   color: var(--color-text-muted);
 }
 
@@ -139,8 +158,11 @@
   color: var(--portal-steel);
 }
 
+.group-card__counts {
+  margin-bottom: 0;
+}
+
 .group-card__link {
-  margin-top: auto;
   padding-top: var(--space-3);
   font-weight: var(--font-weight-medium);
   color: var(--portal-blue);
@@ -157,8 +179,7 @@
 }
 
 .group-card--global {
-  grid-column: 1 / -1;
-  border-color: rgb(0 119 190 / 35%);
+  border-color: rgb(0 119 190 / 40%);
   box-shadow: inset 3px 0 0 var(--portal-blue);
 }
 

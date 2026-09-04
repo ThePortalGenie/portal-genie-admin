@@ -77,6 +77,7 @@ export const METRIC_CATALOG: readonly CustomerMetric[] = [
   {
     key: 'logoUploaded',
     displayName: 'Logo uploaded',
+    description: 'whether a logo has been uploaded',
     category: 'branding',
     type: 'boolean',
     operators: ['is_true', 'is_false'],
@@ -86,6 +87,7 @@ export const METRIC_CATALOG: readonly CustomerMetric[] = [
   {
     key: 'lastPortalSignInAt',
     displayName: 'Last portal sign-in',
+    description: 'whether the customer has ever signed in',
     category: 'activity',
     type: 'date',
     operators: ['is_empty'],
@@ -122,6 +124,7 @@ export const METRIC_CATALOG: readonly CustomerMetric[] = [
   {
     key: 'hasCreatedFolder',
     displayName: 'Has created a folder',
+    description: 'whether at least one folder has been created',
     category: 'content',
     type: 'boolean',
     operators: ['is_true', 'is_false'],
@@ -140,6 +143,7 @@ export const METRIC_CATALOG: readonly CustomerMetric[] = [
   {
     key: 'hasUploadedDocument',
     displayName: 'Has uploaded a document',
+    description: 'whether at least one document has been uploaded',
     category: 'content',
     type: 'boolean',
     operators: ['is_true', 'is_false'],

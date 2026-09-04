@@ -4,6 +4,7 @@ import {
   booleanValueLabels,
   EDITOR_OPERATOR_LABELS,
   metricEditorLabel,
+  metricSelectorLabel,
   timingAnchorLabel,
 } from './metric-display';
 
@@ -14,6 +15,23 @@ function metric(key: string) {
   }
   return found;
 }
+
+const EXPECTED_SELECTOR_LABELS: Record<string, string> = {
+  registeredAt: 'Registration',
+  daysSinceRegistration: 'Days since registration',
+  trialStatus: 'Trial status',
+  trialExpiresAt: 'Trial expiry',
+  daysUntilTrialExpiry: 'Days until trial expiry',
+  accountStatus: 'Account status',
+  logoUploaded: 'Company logo (whether a logo has been uploaded)',
+  lastPortalSignInAt: 'Portal sign-in (whether the customer has ever signed in)',
+  daysSinceLastPortalSignIn: 'Days since last portal sign-in',
+  portalSignInCount: 'Portal sign-in count',
+  folderCount: 'Folder count',
+  hasCreatedFolder: 'Folder (whether at least one folder has been created)',
+  documentCount: 'Document count',
+  hasUploadedDocument: 'Document (whether at least one document has been uploaded)',
+};
 
 describe('metric display labels', () => {
   it('uses administrator-friendly names without changing catalog keys', () => {
@@ -26,6 +44,44 @@ describe('metric display labels', () => {
     expect(metricEditorLabel(metric('daysSinceLastPortalSignIn'))).toBe(
       'Days since last portal sign-in',
     );
+  });
+
+  it('keeps authored condition labels concise', () => {
+    expect(metricEditorLabel(metric('logoUploaded'))).toBe('Company logo');
+    expect(metricEditorLabel(metric('logoUploaded'))).not.toContain('whether');
+    expect(metricEditorLabel(metric('daysSinceLastPortalSignIn'))).toBe(
+      'Days since last portal sign-in',
+    );
+    expect(metricEditorLabel(metric('daysSinceLastPortalSignIn'))).not.toContain('most recent');
+  });
+
+  it('appends a catalogue description only when one is present', () => {
+    expect(metricSelectorLabel(metric('logoUploaded'))).toBe(
+      'Company logo (whether a logo has been uploaded)',
+    );
+    expect(metricSelectorLabel(metric('lastPortalSignInAt'))).toBe(
+      'Portal sign-in (whether the customer has ever signed in)',
+    );
+    expect(metricSelectorLabel(metric('hasCreatedFolder'))).toBe(
+      'Folder (whether at least one folder has been created)',
+    );
+    expect(metricSelectorLabel(metric('hasUploadedDocument'))).toBe(
+      'Document (whether at least one document has been uploaded)',
+    );
+  });
+
+  it('uses the short name when a metric has no description', () => {
+    expect(metricSelectorLabel(metric('registeredAt'))).toBe('Registration');
+    expect(metricSelectorLabel(metric('daysSinceRegistration'))).toBe('Days since registration');
+    expect(metricSelectorLabel(metric('folderCount'))).toBe('Folder count');
+    expect(metricSelectorLabel(metric('portalSignInCount'))).toBe('Portal sign-in count');
+  });
+
+  it('puts catalogue descriptions only on selector option labels', () => {
+    for (const item of METRIC_CATALOG) {
+      expect(metricSelectorLabel(item)).toBe(EXPECTED_SELECTOR_LABELS[item.key]);
+      expect(metricEditorLabel(item)).not.toContain('(');
+    }
   });
 
   it('uses natural boolean value labels', () => {

@@ -33,6 +33,21 @@ describe('summariseRule', () => {
       '1 day after trial expiry · Not active',
     );
   });
+
+  it('does not include metric catalogue descriptions', () => {
+    for (const rule of RULE_FIXTURES) {
+      const summary = summariseRule(rule, METRIC_CATALOG);
+      const journey = summariseJourneyItem(rule, METRIC_CATALOG);
+      for (const metric of METRIC_CATALOG) {
+        if (!metric.description) {
+          continue;
+        }
+        expect(summary).not.toContain(`(${metric.description})`);
+        expect(journey.timing).not.toContain(`(${metric.description})`);
+        expect(journey.eligibility).not.toContain(`(${metric.description})`);
+      }
+    }
+  });
 });
 
 describe('summariseJourneyItem', () => {

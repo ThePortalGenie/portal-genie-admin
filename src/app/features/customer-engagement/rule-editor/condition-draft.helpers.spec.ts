@@ -4,6 +4,7 @@ import {
   applyMetricChange,
   applyOperatorChange,
   booleanChoice,
+  groupMetricsByCategory,
   operatorFromBooleanChoice,
   operatorsForMetric,
 } from './condition-draft.helpers';
@@ -18,6 +19,30 @@ function metric(key: string) {
 }
 
 describe('condition draft helpers', () => {
+  it('groups metrics from catalogue category metadata', () => {
+    const groups = groupMetricsByCategory(METRIC_CATALOG);
+    expect(groups.map((group) => group.id)).toEqual([
+      'lifecycle',
+      'branding',
+      'activity',
+      'content',
+    ]);
+    expect(groups.map((group) => group.label)).toEqual([
+      'Lifecycle',
+      'Branding',
+      'Activity',
+      'Content',
+    ]);
+    expect(groups[0].metrics.map((item) => item.key)).toEqual([
+      'registeredAt',
+      'daysSinceRegistration',
+      'trialStatus',
+      'trialExpiresAt',
+      'daysUntilTrialExpiry',
+      'accountStatus',
+    ]);
+  });
+
   it('limits operators to those declared on the metric', () => {
     expect(operatorsForMetric(metric('logoUploaded'))).toEqual(['is_true', 'is_false']);
     expect(operatorsForMetric(metric('trialStatus'))).toEqual(['is', 'is_not']);

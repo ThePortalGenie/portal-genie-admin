@@ -39,6 +39,8 @@ export type TimingDirection = 'after' | 'before';
 export type CustomerMetric = {
   key: string;
   displayName: string;
+  /** Optional selector clarification. Not persisted and not used in summaries. */
+  description?: string;
   category: MetricCategory;
   type: MetricType;
   operators: readonly MetricOperator[];
