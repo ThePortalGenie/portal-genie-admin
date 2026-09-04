@@ -37,7 +37,6 @@
 
 .toolbar__search {
   flex: 1 1 16rem;
-  min-width: 12rem;
 }
 
 .toolbar__field {
@@ -85,6 +84,7 @@
 }
 
 .toolbar--search {
+  max-width: 40rem;
   margin-bottom: var(--space-8);
 }
 
