@@ -111,7 +111,7 @@ Category describes **what type** of rule it is. Rule Group describes **which jou
 
 ### MetricCategory
 
-`lifecycle` | `branding` | `integrations` | `activity` | `content` | `communications`
+`lifecycle` | `branding` | `admin_activity` | `portal_usage` | `communications`
 
 ### RuleTimingMode
 

@@ -214,7 +214,7 @@ Each **condition row**:
 [ Metric (grouped by category) ]  [ Operator ]  [ Value … ]  [ Remove ]
 ```
 
-- Metric selector lists catalog entries grouped by Lifecycle, Branding, Activity, Content.
+- Metric selector lists catalog entries grouped by Lifecycle, Branding, Admin activity, Portal usage, Communications.
 - Operator selector lists only operators valid for that metric’s type (see metric catalog).
 - Value control depends on type:
   - boolean: no extra value (operator *is yes* / *is no*) **or** a Yes/No select — pick **Yes/No select** so the operator can stay `is` for both, which is easier to read. See domain model: booleans use `is_true` / `is_false` **or** `is` + boolean value. **v1 UX:** operator hidden for booleans; value is Yes / No. Stored as `is_true` / `is_false`.

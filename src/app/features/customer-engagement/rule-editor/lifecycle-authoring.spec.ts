@@ -125,7 +125,7 @@ describe('lifecycle authoring', () => {
     ]);
   });
 
-  it('E: days since last portal sign-in does not require a timing object', () => {
+  it('E: days since last admin sign-in does not require a timing object', () => {
     const { children, timing } = draftPartsFromEditorRows(
       [
         row({

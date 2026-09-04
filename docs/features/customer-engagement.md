@@ -21,7 +21,7 @@ Administrators should be able to express rules such as:
 > AND they have not uploaded a logo  
 > THEN send the selected setup/branding communication.
 
-> IF the customer has had no portal sign-ins in the last X days  
+> IF the customer has had no admin sign-ins in the last X days  
 > THEN send the selected re-engagement communication.
 
 ---
@@ -82,7 +82,7 @@ A named, optionally enabled definition: **when** a customer matches a condition 
 
 ### Condition
 
-A single test against one metric, for example “trial status is In trial” or “days since last portal sign-in is at least 14”.
+A single test against one metric, for example “trial status is In trial” or “days since last admin sign-in is at least 14”.
 
 ### Condition group
 
@@ -102,23 +102,37 @@ When, relative to a match, the communication should be requested (immediately, o
 
 The backend will eventually supply these. The frontend must treat them as a **catalog of field definitions**, not as fields hard-coded only in one template.
 
-Initial catalog:
+Initial catalog (implemented keys; see `docs/architecture/metric-catalog.md` for categories and operators):
 
-| Field key | Label | Type | Examples of operators |
+| Field key | Label | Type | Notes |
 | --- | --- | --- | --- |
-| `registeredAt` | Registration date | date | relative days after; before/after a date |
+| `registeredAt` | Registration date | date | lifecycle timing anchor (after) |
+| `daysSinceRegistration` | Days since registration | duration | eligibility |
 | `trialStatus` | Trial status | enum | is / is not |
-| `trialExpiresAt` | Trial expiry date | date | relative days before/after; expired |
+| `trialExpiresAt` | Trial expiry date | date | lifecycle timing anchor (before/after) |
+| `daysUntilTrialExpiry` | Days until trial expiry | duration | eligibility |
 | `accountStatus` | Account / subscription status | enum | is / is not |
-| `logoUploaded` | Company logo uploaded | boolean | is true / is false |
-| `accountingSoftwareConnected` | Accounting software connected | boolean | is true / is false |
-| `lastPortalSignInAt` | Last portal sign-in | date / relative | no sign-in in last X days; ever / never |
-| `portalSignInCount` | Number of portal sign-ins | number | equals, greater than, less than, between |
-| `foldersCreated` | Folders have been created | boolean | is true / is false |
-| `folderCount` | Number of folders | number | equals, greater than, less than |
-| `documentsUploaded` | Documents have been uploaded | boolean | is true / is false |
-| `documentCount` | Number of documents | number | equals, greater than, less than |
-| `hasCreatedScheduledEmailTemplate` | Scheduled email template created | boolean | is true / is false |
+| `logoUploaded` | Company logo | boolean | Branding; whether a logo has been uploaded |
+| `lastPortalSignInAt` | Admin sign-in | date | **Admin** sign-in to Portal Genie; `is_empty` only. Key preserved. |
+| `daysSinceLastPortalSignIn` | Days since last admin sign-in | duration | Admin inactivity. Key preserved. |
+| `portalSignInCount` | Admin sign-in count | number | Admin activity. Key preserved. |
+| `hasCreatedFolder` | Folder | boolean | Admin activity |
+| `folderCount` | Folder count | number | Admin activity |
+| `hasUploadedDocument` | Document | boolean | Admin activity |
+| `documentCount` | Document count | number | Admin activity |
+| `lastDocumentUploadedAt` | Last document uploaded | date | Admin activity; not a timing anchor |
+| `daysSinceLastDocumentUpload` | Days since last document upload | duration | Admin activity recency |
+| `accountingSoftwareConnected` | Accounting software | boolean | connected / not connected |
+| `hasPortalVisit` | Portal visit | boolean | **Client** portal visit |
+| `daysSinceLastPortalVisit` | Days since last portal visit | duration | Client portal recency |
+| `portalVisitCount` | Portal visit count | number | Client portal |
+| `hasPortalDocumentUpload` | Portal document upload | boolean | Client portal |
+| `portalDocumentUploadCount` | Portal document upload count | number | Client portal |
+| `lastPortalDocumentUploadedAt` | Last portal document uploaded | date | Client portal; not a timing anchor |
+| `daysSinceLastPortalDocumentUpload` | Days since last portal document upload | duration | Client portal recency |
+| `hasCreatedScheduledEmailTemplate` | Scheduled email template | boolean | Communications |
+
+The historical names “portal sign-in” referred to the subscriber/admin logging into Portal Genie, not a client using the client portal. Display copy now says **Admin sign-in**. Client portal behaviour uses the separate Portal usage metrics.
 
 The catalog must allow later fields without rewriting the builder (new key, type, operators, labels).
 
@@ -150,7 +164,7 @@ Required capabilities:
 - Relative dates:
   - X days **after** registration
   - X days **before** trial expiry
-  - X days **since** last portal sign-in (inactivity)
+  - X days **since** last admin sign-in (inactivity)
 - Usage thresholds (counts and booleans)
 
 Operators by type (v1):

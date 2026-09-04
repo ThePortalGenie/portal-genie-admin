@@ -208,14 +208,64 @@ function previewCondition(
         lead ? 'a customer' : 'they',
         'created a scheduled email template',
       );
+    case 'hasPortalVisit':
+      return previewClientBoolean(operator, 'visited the portal');
+    case 'hasPortalDocumentUpload':
+      return previewClientBoolean(operator, 'uploaded a document to the portal');
     case 'lastPortalSignInAt':
       return operator === 'is_empty'
         ? lead
-          ? 'a customer has never signed in to the portal'
-          : 'they have never signed in to the portal'
+          ? 'a customer has never signed in as admin'
+          : 'they have never signed in as admin'
+        : '';
+    case 'lastDocumentUploadedAt':
+      return operator === 'is_empty'
+        ? lead
+          ? 'a customer has no last document upload'
+          : 'they have no last document upload'
+        : '';
+    case 'lastPortalDocumentUploadedAt':
+      return operator === 'is_empty'
+        ? 'a client has not uploaded a document to the portal'
         : '';
     case 'daysSinceLastPortalSignIn':
-      return previewDaysSinceSignIn(operator, condition.value, lead);
+      return previewDaysSinceActivity(operator, condition.value, lead, {
+        gteLead: (days) => `a customer has not signed in as admin for ${days} days`,
+        gteFollow: (days) => `they have not signed in as admin for ${days} days`,
+        eqLead: (days) => `a customer’s last admin sign-in was ${days} days ago`,
+        eqFollow: (days) => `their last admin sign-in was ${days} days ago`,
+        subjectLead: 'a customer’s last admin sign-in',
+        subjectFollow: 'their last admin sign-in',
+      });
+    case 'daysSinceLastDocumentUpload':
+      return previewDaysSinceActivity(operator, condition.value, lead, {
+        gteLead: (days) => `a customer has not uploaded a document for ${days} days`,
+        gteFollow: (days) => `they have not uploaded a document for ${days} days`,
+        eqLead: (days) => `a customer’s last document upload was ${days} days ago`,
+        eqFollow: (days) => `their last document upload was ${days} days ago`,
+        subjectLead: 'a customer’s last document upload',
+        subjectFollow: 'their last document upload',
+      });
+    case 'daysSinceLastPortalVisit':
+      return previewDaysSinceActivity(operator, condition.value, lead, {
+        gteLead: (days) => `a client has not visited the portal for ${days} days`,
+        gteFollow: (days) => `a client has not visited the portal for ${days} days`,
+        eqLead: (days) => `the last client portal visit was ${days} days ago`,
+        eqFollow: (days) => `the last client portal visit was ${days} days ago`,
+        subjectLead: 'the last client portal visit',
+        subjectFollow: 'the last client portal visit',
+      });
+    case 'daysSinceLastPortalDocumentUpload':
+      return previewDaysSinceActivity(operator, condition.value, lead, {
+        gteLead: (days) =>
+          `a client has not uploaded a document to the portal for ${days} days`,
+        gteFollow: (days) =>
+          `a client has not uploaded a document to the portal for ${days} days`,
+        eqLead: (days) => `the last client portal document upload was ${days} days ago`,
+        eqFollow: (days) => `the last client portal document upload was ${days} days ago`,
+        subjectLead: 'the last client portal document upload',
+        subjectFollow: 'the last client portal document upload',
+      });
     case 'registeredAt':
       return operator === 'is_empty'
         ? lead
@@ -306,12 +356,32 @@ function previewAccountStatus(
   return '';
 }
 
-function previewDaysSinceSignIn(
+function previewClientBoolean(operator: MetricOperator, action: string): string {
+  if (operator === 'is_true') {
+    return `a client has ${action}`;
+  }
+  if (operator === 'is_false') {
+    return `a client has not ${action}`;
+  }
+  return '';
+}
+
+type DaysSinceCopy = {
+  gteLead: (days: number) => string;
+  gteFollow: (days: number) => string;
+  eqLead: (days: number) => string;
+  eqFollow: (days: number) => string;
+  subjectLead: string;
+  subjectFollow: string;
+};
+
+function previewDaysSinceActivity(
   operator: MetricOperator,
   value: ConditionValue,
   lead: boolean,
+  copy: DaysSinceCopy,
 ): string {
-  const subject = lead ? 'a customer’s last portal sign-in' : 'their last portal sign-in';
+  const subject = lead ? copy.subjectLead : copy.subjectFollow;
   if (operator === 'between' && isRange(value)) {
     return `${subject} was between ${value.min} and ${value.max} days ago`;
   }
@@ -322,13 +392,9 @@ function previewDaysSinceSignIn(
   switch (operator) {
     case 'gte':
     case 'gt':
-      return lead
-        ? `a customer has not signed in to their portal for ${days} days`
-        : `they have not signed in to their portal for ${days} days`;
+      return lead ? copy.gteLead(days) : copy.gteFollow(days);
     case 'eq':
-      return lead
-        ? `a customer’s last portal sign-in was ${days} days ago`
-        : `their last portal sign-in was ${days} days ago`;
+      return lead ? copy.eqLead(days) : copy.eqFollow(days);
     case 'lte':
       return `${subject} was at most ${days} days ago`;
     case 'lt':

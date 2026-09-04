@@ -49,7 +49,7 @@ describe('summariseRule', () => {
       '7 days before trial expiry',
     );
     expect(summariseRule(fixture('rule_inactive_14'), METRIC_CATALOG)).toBe(
-      'No portal sign-in for 14 days',
+      'No admin sign-in for 14 days',
     );
     expect(summariseRule(fixture('rule_trial_today'), METRIC_CATALOG)).toBe('On trial expiry');
     expect(summariseRule(fixture('rule_trial_expired'), METRIC_CATALOG)).toBe(
@@ -82,6 +82,80 @@ describe('summariseRule', () => {
         METRIC_CATALOG,
       ),
     ).toBe('Scheduled email template created');
+  });
+
+  it('keeps admin and client portal summaries distinct', () => {
+    expect(
+      summariseRule(ruleWithCondition('lastPortalSignInAt', 'is_empty'), METRIC_CATALOG),
+    ).toBe('Never signed in as admin');
+    expect(summariseRule(ruleWithCondition('hasPortalVisit', 'is_true'), METRIC_CATALOG)).toBe(
+      'Client has visited the portal',
+    );
+    expect(summariseRule(ruleWithCondition('hasPortalVisit', 'is_false'), METRIC_CATALOG)).toBe(
+      'No client portal visit',
+    );
+    expect(
+      summariseRule(ruleWithCondition('hasPortalDocumentUpload', 'is_true'), METRIC_CATALOG),
+    ).toBe('Client has uploaded a portal document');
+    expect(
+      summariseRule(ruleWithCondition('hasPortalDocumentUpload', 'is_false'), METRIC_CATALOG),
+    ).toBe('No portal document uploaded');
+    expect(
+      summariseRule(
+        {
+          ...ruleWithCondition('daysSinceLastPortalVisit', 'gt'),
+          rootGroup: {
+            id: 'g',
+            combinator: 'and',
+            children: [
+              { id: 'c', metricKey: 'daysSinceLastPortalVisit', operator: 'gt', value: 14 },
+            ],
+          },
+        },
+        METRIC_CATALOG,
+      ),
+    ).toBe('No portal visit for 14 days');
+    expect(
+      summariseRule(
+        {
+          ...ruleWithCondition('portalVisitCount', 'gte'),
+          rootGroup: {
+            id: 'g',
+            combinator: 'and',
+            children: [{ id: 'c', metricKey: 'portalVisitCount', operator: 'gte', value: 3 }],
+          },
+        },
+        METRIC_CATALOG,
+      ),
+    ).toBe('Portal visit count at least 3');
+    expect(
+      summariseRule(
+        {
+          ...ruleWithCondition('portalDocumentUploadCount', 'eq'),
+          rootGroup: {
+            id: 'g',
+            combinator: 'and',
+            children: [
+              { id: 'c', metricKey: 'portalDocumentUploadCount', operator: 'eq', value: 0 },
+            ],
+          },
+        },
+        METRIC_CATALOG,
+      ),
+    ).toBe('Portal document upload count is 0');
+    expect(
+      summariseRule(
+        {
+          ...ruleWithCondition('portalSignInCount', 'eq'),
+          rootGroup: {
+            id: 'g',
+            combinator: 'and',
+            children: [{ id: 'c', metricKey: 'portalSignInCount', operator: 'eq', value: 0 }],
+          },
+        },
+        METRIC_CATALOG,
+      ),
+    ).toBe('Admin sign-in count is 0');
   });
 
   it('does not include metric catalogue descriptions', () => {
@@ -119,7 +193,7 @@ describe('summariseJourneyItem', () => {
 
   it('describes inactivity as the trigger without repeating the condition', () => {
     expect(summariseJourneyItem(fixture('rule_inactive_14'), METRIC_CATALOG)).toEqual({
-      timing: 'When inactive for 14 days',
+      timing: 'When no admin sign-in for 14 days',
       eligibility: '',
     });
   });

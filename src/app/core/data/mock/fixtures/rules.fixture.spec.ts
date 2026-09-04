@@ -102,6 +102,15 @@ describe('rule fixtures', () => {
     });
   });
 
+  it('keeps getting-started on the preserved admin sign-in key', () => {
+    expect(conditionsOf('rule_getting_started')).toEqual([
+      expect.objectContaining({
+        metricKey: 'lastPortalSignInAt',
+        operator: 'is_empty',
+      }),
+    ]);
+  });
+
   it('uses 14, 30, and 60-day inactivity conditions with implicit on_match', () => {
     expect(ruleById('rule_inactive_14').timing.mode).toBe('on_match');
     expect(conditionsOf('rule_inactive_14')).toEqual([

@@ -85,7 +85,7 @@ export const TEMPLATE_FIXTURES: readonly CommunicationTemplate[] = [
     id: 'long-term-reengagement',
     name: 'Long-term re-engagement',
     category: 'inactivity',
-    purpose: 'Re-engage customers after a longer period without a portal sign-in.',
+    purpose: 'Re-engage customers after a longer period without an admin sign-in.',
     lifecycleStage: 'Quiet for two months or more',
     available: true,
   },

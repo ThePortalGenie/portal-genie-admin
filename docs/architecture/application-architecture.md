@@ -86,7 +86,7 @@ The Angular application must not:
 
 A communication should trigger **once per customer per qualifying rule occurrence**.
 
-Example: if a customer has had no portal sign-in for 14 days, send the re-engagement template **once** for that occurrence. Do not send again on every later evaluation while the same qualifying state remains true.
+Example: if a customer has had no admin sign-in for 14 days, send the re-engagement template **once** for that occurrence. Do not send again on every later evaluation while the same qualifying state remains true.
 
 The frontend does not implement this. Document it so administrators’ mental model matches backend intent. A short helper in the editor is allowed; a frequency control is not.
 
@@ -172,7 +172,7 @@ See `frontend-services.md` for service placement and component ownership.
 
 Do not duplicate timing offsets as eligibility conditions. Example: “3 days after registration if no logo” = timing 3 days after registration + condition logo uploaded = no.
 
-Duration metrics may still appear in the catalog where they are useful for **behavioural** eligibility (for example days since last portal sign-in ≥ 14). They are not a second copy of lifecycle send-time.
+Duration metrics may still appear in the catalog where they are useful for **behavioural** eligibility (for example days since last admin sign-in ≥ 14). They are not a second copy of lifecycle send-time.
 
 **v1 timing anchors:** `registeredAt` (after only), `trialExpiresAt` (before and after). Further anchors are catalog additions.
 

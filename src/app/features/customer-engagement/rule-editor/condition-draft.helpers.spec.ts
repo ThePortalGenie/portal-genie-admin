@@ -24,24 +24,22 @@ describe('condition draft helpers', () => {
     expect(groups.map((group) => group.id)).toEqual([
       'lifecycle',
       'branding',
-      'integrations',
-      'activity',
-      'content',
+      'admin_activity',
+      'portal_usage',
       'communications',
     ]);
     expect(groups.map((group) => group.label)).toEqual([
       'Lifecycle',
       'Branding',
-      'Integrations',
-      'Activity',
-      'Content',
+      'Admin activity',
+      'Portal usage',
       'Communications',
     ]);
-    expect(groups.map((group) => group.id).indexOf('integrations')).toBeLessThan(
-      groups.map((group) => group.id).indexOf('activity'),
-    );
-    expect(groups.map((group) => group.id).indexOf('communications')).toBeGreaterThan(
-      groups.map((group) => group.id).indexOf('content'),
+    expect(groups.map((group) => group.id)).not.toContain('activity');
+    expect(groups.map((group) => group.id)).not.toContain('content');
+    expect(groups.map((group) => group.id)).not.toContain('integrations');
+    expect(groups.map((group) => group.id).indexOf('admin_activity')).toBeLessThan(
+      groups.map((group) => group.id).indexOf('portal_usage'),
     );
     expect(groups[0].metrics.map((item) => item.key)).toEqual([
       'registeredAt',
@@ -129,6 +127,39 @@ describe('condition draft helpers', () => {
       'is_true',
       'is_false',
     ]);
+  });
+
+  it('persists portal-usage booleans without mixing them with admin activity keys', () => {
+    const visit = applyOperatorChange(
+      applyMetricChange(emptyConditionDraft(), metric('hasPortalVisit')),
+      metric('hasPortalVisit'),
+      operatorFromBooleanChoice('yes'),
+    );
+    expect(visit.metricKey).toBe('hasPortalVisit');
+    expect(visit.operator).toBe('is_true');
+    expect(visit.value).toBeNull();
+    expect(visit.metricKey).not.toBe('lastPortalSignInAt');
+
+    const noUpload = applyOperatorChange(
+      applyMetricChange(emptyConditionDraft(), metric('hasPortalDocumentUpload')),
+      metric('hasPortalDocumentUpload'),
+      operatorFromBooleanChoice('no'),
+    );
+    expect(noUpload.metricKey).toBe('hasPortalDocumentUpload');
+    expect(noUpload.operator).toBe('is_false');
+    expect(noUpload.metricKey).not.toBe('hasUploadedDocument');
+  });
+
+  it('keeps numeric count and duration operators for admin and portal metrics', () => {
+    expect(operatorsForMetric(metric('portalSignInCount'))).toEqual(
+      operatorsForMetric(metric('portalVisitCount')),
+    );
+    expect(operatorsForMetric(metric('daysSinceLastPortalSignIn'))).toEqual(
+      operatorsForMetric(metric('daysSinceLastPortalVisit')),
+    );
+    expect(operatorsForMetric(metric('daysSinceLastDocumentUpload'))).toContain('gt');
+    expect(operatorsForMetric(metric('lastDocumentUploadedAt'))).toEqual(['is_empty']);
+    expect(operatorsForMetric(metric('lastPortalDocumentUploadedAt'))).toEqual(['is_empty']);
   });
 
   it('resets enum values when the operator changes', () => {

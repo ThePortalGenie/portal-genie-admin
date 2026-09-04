@@ -211,7 +211,7 @@ export const RULE_FIXTURES: Rule[] = [
   {
     id: 'rule_getting_started',
     name: 'Need Help Getting Started?',
-    description: 'Reach customers who have not signed in to the portal a few days after registering.',
+    description: 'Reach customers who have not signed in as admin a few days after registering.',
     category: 'engagement',
     groupId: GROUP_ENGAGEMENT,
     sequenceOrder: 1,
@@ -227,7 +227,7 @@ export const RULE_FIXTURES: Rule[] = [
   {
     id: 'rule_inactive_14',
     name: "We Haven't Seen You in a While",
-    description: 'Re-engage customers with no recent portal sign-in.',
+    description: 'Re-engage customers with no recent admin sign-in.',
     category: 'engagement',
     groupId: GROUP_ENGAGEMENT,
     sequenceOrder: 2,
@@ -259,7 +259,7 @@ export const RULE_FIXTURES: Rule[] = [
   {
     id: 'rule_inactive_60',
     name: 'Your Portal Is Waiting for You',
-    description: 'Longer-term re-engagement after two months without a portal sign-in.',
+    description: 'Longer-term re-engagement after two months without an admin sign-in.',
     category: 'engagement',
     groupId: GROUP_ENGAGEMENT,
     sequenceOrder: 4,

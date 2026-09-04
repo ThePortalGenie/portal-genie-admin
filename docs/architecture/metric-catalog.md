@@ -1,12 +1,14 @@
 # Metric Catalog Architecture
 
-**Status:** Phase 1 blueprint — **do not implement the catalog in code yet**
+**Status:** Implemented in the frontend catalog (`METRIC_CATALOG`). This file is the architecture source of truth for metric keys, categories, and operators.
 
 The catalog is the single description of what administrators can test in a rule. The condition builder is driven by this data. Adding a metric later should be a catalog (and mock) change, not a new form.
 
 Customer Usage will later **display** the same keys. It must not own a second incompatible list.
 
 Live customer values are not part of this catalog. This file defines **definitions**, not readings.
+
+Selector categories, in order: **Lifecycle**, **Branding**, **Admin activity**, **Portal usage**, **Communications**. There is no generic Content or Integrations category. Branding stays separate even though an administrator uploads the logo.
 
 ---
 
@@ -30,7 +32,7 @@ Live customer values are not part of this catalog. This file defines **definitio
 | `duration_days` | same as number | Yes (integer days) |
 | `date` | `is_empty` only in v1 | No |
 
-Calendar comparisons (“registered before 1 Jan”) are deferred. v1 date metrics exist so “never signed in” is expressible via `lastPortalSignInAt` + `is_empty`.
+Calendar comparisons (“registered before 1 Jan”) are deferred. v1 date metrics exist so “never occurred” is expressible via `is_empty`. Recency uses a derived `duration_days` metric, not date comparison.
 
 ---
 
@@ -80,36 +82,50 @@ Notes:
 
 | Key | Display name | Type | Operators | Value required | Timing anchor |
 | --- | --- | --- | --- | --- | --- |
-| `logoUploaded` | Logo uploaded | `boolean` | `is_true`, `is_false` | No | No |
+| `logoUploaded` | Company logo | `boolean` | `is_true`, `is_false` | No | No |
 
-### Integrations
+Company logo stays under Branding. It describes business state, not admin usage, even though an administrator performs the upload.
+
+### Admin activity
+
+Activity performed by the subscriber/admin inside Portal Genie. Not client-portal behaviour.
+
+**Portal sign-in key interpretation:** `lastPortalSignInAt`, `daysSinceLastPortalSignIn`, and `portalSignInCount` mean **subscriber/admin sign-in to Portal Genie**, not a client visiting the client portal. Display names use “Admin sign-in”. Keys are preserved so existing fixture rules continue to load. Client portal behaviour uses the separate Portal usage metrics.
 
 | Key | Display name | Type | Operators | Value required | Timing anchor |
 | --- | --- | --- | --- | --- | --- |
+| `lastPortalSignInAt` | Admin sign-in | `date` | `is_empty` | No | No |
+| `daysSinceLastPortalSignIn` | Days since last admin sign-in | `duration_days` | number set | Yes | No |
+| `portalSignInCount` | Admin sign-in count | `number` | number set | Yes | No |
+| `hasCreatedFolder` | Folder | `boolean` | `is_true`, `is_false` | No | No |
+| `folderCount` | Folder count | `number` | number set | Yes | No |
+| `hasUploadedDocument` | Document | `boolean` | `is_true`, `is_false` | No | No |
+| `documentCount` | Document count | `number` | number set | Yes | No |
+| `lastDocumentUploadedAt` | Last document uploaded | `date` | `is_empty` | No | No |
+| `daysSinceLastDocumentUpload` | Days since last document upload | `duration_days` | number set | Yes | No |
 | `accountingSoftwareConnected` | Accounting software | `boolean` | `is_true`, `is_false` | No | No |
 
-Frontend contract only: whether accounting software is connected. Do not query an integration from this app.
+Admin inactivity: prefer `daysSinceLastPortalSignIn` `gte` X. Never signed in as admin: `lastPortalSignInAt` `is_empty`. Authored wording for accounting is “is connected” / “is not connected”; stored operators remain `is_true` / `is_false`.
 
-### Activity
+`hasCreatedFolder` is equivalent to `folderCount` `gt` 0. Validation may **warn** if both are used in the same AND group in a redundant way; it should **error** if they contradict (has created folder = yes AND folder count = 0).
 
-| Key | Display name | Type | Operators | Value required | Timing anchor |
-| --- | --- | --- | --- | --- | --- |
-| `lastPortalSignInAt` | Last portal sign-in | `date` | `is_empty` | No | **No in v1** (eligibility only; future timing anchor if added to the catalog) |
-| `daysSinceLastPortalSignIn` | Days since last portal sign-in | `duration_days` | number set | Yes | No |
-| `portalSignInCount` | Portal sign-in count | `number` | number set | Yes | No |
+`lastDocumentUploadedAt` is an activity date, not a lifecycle timing anchor. Recency uses `daysSinceLastDocumentUpload`.
 
-Inactivity: prefer `daysSinceLastPortalSignIn` `gte` X. Never signed in: `lastPortalSignInAt` `is_empty` (optionally OR with count `eq` 0 — contradictory if AND’d with “days since last sign-in”; validator should warn or error when mixing empty last sign-in with days-since-last-sign-in).
+### Portal usage
 
-### Content
+Activity performed by the subscriber’s **clients** in the client-facing portal. Do not reuse admin activity keys.
 
 | Key | Display name | Type | Operators | Value required | Timing anchor |
 | --- | --- | --- | --- | --- | --- |
-| `folderCount` | Folder count | `number` | number set | Yes | No |
-| `hasCreatedFolder` | Has created a folder | `boolean` | `is_true`, `is_false` | No | No |
-| `documentCount` | Document count | `number` | number set | Yes | No |
-| `hasUploadedDocument` | Has uploaded a document | `boolean` | `is_true`, `is_false` | No | No |
+| `hasPortalVisit` | Portal visit | `boolean` | `is_true`, `is_false` | No | No |
+| `daysSinceLastPortalVisit` | Days since last portal visit | `duration_days` | number set | Yes | No |
+| `portalVisitCount` | Portal visit count | `number` | number set | Yes | No |
+| `hasPortalDocumentUpload` | Portal document upload | `boolean` | `is_true`, `is_false` | No | No |
+| `portalDocumentUploadCount` | Portal document upload count | `number` | number set | Yes | No |
+| `lastPortalDocumentUploadedAt` | Last portal document uploaded | `date` | `is_empty` | No | No |
+| `daysSinceLastPortalDocumentUpload` | Days since last portal document upload | `duration_days` | number set | Yes | No |
 
-`hasCreatedFolder` is equivalent to `folderCount` `gt` 0. Both exist because administrators think in yes/no for adoption and in counts for milestones. Validation may **warn** if both are used in the same AND group in a redundant way; it should **error** if they contradict (has created folder = yes AND folder count = 0).
+Authored wording for visit/upload booleans is “has occurred” / “has not occurred”. `lastPortalDocumentUploadedAt` is not a timing anchor; recency uses `daysSinceLastPortalDocumentUpload`.
 
 ### Communications
 
@@ -117,7 +133,7 @@ Inactivity: prefer `daysSinceLastPortalSignIn` `gte` X. Never signed in: `lastPo
 | --- | --- | --- | --- | --- | --- |
 | `hasCreatedScheduledEmailTemplate` | Scheduled email template | `boolean` | `is_true`, `is_false` | No | No |
 
-Frontend contract only: whether a scheduled email template has been created. Do not inspect or send email from this app.
+Frontend contract only: whether a scheduled email template has been created. Do not inspect or send email from this app. Authored wording is “has been created” / “has not been created”.
 
 ---
 
@@ -128,7 +144,7 @@ Frontend contract only: whether a scheduled email template has been created. Do 
 | `registeredAt` | Yes | No |
 | `trialExpiresAt` | Yes (X days after trial expiry) | Yes (X days before trial expiry) |
 
-`lastPortalSignInAt` is **not** a v1 timing anchor. Inactivity is expressed as eligibility (`daysSinceLastPortalSignIn`). Further anchors are catalog additions.
+`lastPortalSignInAt`, `lastDocumentUploadedAt`, and `lastPortalDocumentUploadedAt` are **not** v1 timing anchors. Admin inactivity is eligibility (`daysSinceLastPortalSignIn`). Client portal recency is eligibility (`daysSinceLastPortalVisit` / `daysSinceLastPortalDocumentUpload`). Further anchors are catalog additions.
 
 ---
 

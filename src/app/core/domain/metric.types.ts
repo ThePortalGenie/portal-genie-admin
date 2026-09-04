@@ -21,9 +21,8 @@ export type MetricOperator = (typeof METRIC_OPERATORS)[number];
 export const METRIC_CATEGORIES = [
   'lifecycle',
   'branding',
-  'integrations',
-  'activity',
-  'content',
+  'admin_activity',
+  'portal_usage',
   'communications',
 ] as const;
 
@@ -32,9 +31,8 @@ export type MetricCategory = (typeof METRIC_CATEGORIES)[number];
 export const METRIC_CATEGORY_LABELS: Record<MetricCategory, string> = {
   lifecycle: 'Lifecycle',
   branding: 'Branding',
-  integrations: 'Integrations',
-  activity: 'Activity',
-  content: 'Content',
+  admin_activity: 'Admin activity',
+  portal_usage: 'Portal usage',
   communications: 'Communications',
 };
 

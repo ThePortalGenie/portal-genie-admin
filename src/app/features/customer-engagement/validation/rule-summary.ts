@@ -115,8 +115,8 @@ export function summariseJourneyTiming(rule: Rule): string {
   const inactivityDays = inactivityThresholdDays(rule);
   if (inactivityDays !== null) {
     return inactivityDays === 1
-      ? 'When inactive for 1 day'
-      : `When inactive for ${inactivityDays} days`;
+      ? 'When no admin sign-in for 1 day'
+      : `When no admin sign-in for ${inactivityDays} days`;
   }
 
   return 'When the conditions become true';
@@ -228,14 +228,44 @@ function summariseCondition(condition: RuleCondition, metric: CustomerMetric | u
 
   if (condition.operator === 'is_empty') {
     if (condition.metricKey === 'lastPortalSignInAt') {
-      return 'Never signed in to the portal';
+      return 'Never signed in as admin';
+    }
+    if (condition.metricKey === 'lastDocumentUploadedAt') {
+      return 'No document uploaded';
+    }
+    if (condition.metricKey === 'lastPortalDocumentUploadedAt') {
+      return 'No portal document uploaded';
     }
     return `${metric.displayName} not set`;
   }
 
   if (condition.metricKey === 'daysSinceLastPortalSignIn' && isAtLeastOperator(condition.operator)) {
     const days = numericValue(condition.value);
-    return days === null ? metric.displayName : `No portal sign-in for ${days} days`;
+    return days === null ? metric.displayName : `No admin sign-in for ${days} days`;
+  }
+
+  if (
+    condition.metricKey === 'daysSinceLastPortalVisit' &&
+    isAtLeastOperator(condition.operator)
+  ) {
+    const days = numericValue(condition.value);
+    return days === null ? metric.displayName : `No portal visit for ${days} days`;
+  }
+
+  if (
+    condition.metricKey === 'daysSinceLastDocumentUpload' &&
+    isAtLeastOperator(condition.operator)
+  ) {
+    const days = numericValue(condition.value);
+    return days === null ? metric.displayName : `No document upload for ${days} days`;
+  }
+
+  if (
+    condition.metricKey === 'daysSinceLastPortalDocumentUpload' &&
+    isAtLeastOperator(condition.operator)
+  ) {
+    const days = numericValue(condition.value);
+    return days === null ? metric.displayName : `No portal document upload for ${days} days`;
   }
 
   return summariseNumeric(metric.displayName, condition.operator, condition.value);
@@ -258,6 +288,10 @@ function summariseBoolean(
       return isYes ? 'Has uploaded a document' : 'No documents uploaded';
     case 'hasCreatedScheduledEmailTemplate':
       return isYes ? 'Scheduled email template created' : 'No scheduled email template created';
+    case 'hasPortalVisit':
+      return isYes ? 'Client has visited the portal' : 'No client portal visit';
+    case 'hasPortalDocumentUpload':
+      return isYes ? 'Client has uploaded a portal document' : 'No portal document uploaded';
     default:
       return isYes ? displayName : `${displayName}: no`;
   }

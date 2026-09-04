@@ -88,7 +88,7 @@ describe('previewRuleDraft', () => {
 
     const preview = previewRuleDraft(draft, METRIC_CATALOG, TEMPLATE_FIXTURES);
     expect(preview.lines[0]).toBe(
-      'When a customer has not signed in to their portal for 14 days',
+      'When a customer has not signed in as admin for 14 days',
     );
   });
 
@@ -190,6 +190,79 @@ describe('previewRuleDraft', () => {
       'When a customer has not created a scheduled email template',
     );
     expect(preview.lines.join(' ')).not.toContain('is_false');
+  });
+
+  it('describes client portal visits without using admin sign-in language', () => {
+    const draft = emptyRuleDraft();
+    draft.name = 'Portal visit';
+    draft.category = 'engagement';
+    draft.groupId = 'rg_engagement';
+    draft.sequenceOrder = 1;
+    draft.rootGroup.children = [
+      { id: '1', metricKey: 'hasPortalVisit', operator: 'is_true', value: null },
+    ];
+    draft.templateId = 'setup-reminder';
+
+    const preview = previewRuleDraft(draft, METRIC_CATALOG, TEMPLATE_FIXTURES);
+    expect(preview.lines[0]).toBe('When a client has visited the portal');
+    expect(preview.lines.join(' ')).not.toContain('admin');
+    expect(preview.lines.join(' ')).not.toContain('signed in');
+  });
+
+  it('describes client portal document uploads separately from admin documents', () => {
+    const draft = emptyRuleDraft();
+    draft.name = 'Portal upload';
+    draft.category = 'engagement';
+    draft.groupId = 'rg_engagement';
+    draft.sequenceOrder = 1;
+    draft.rootGroup.children = [
+      { id: '1', metricKey: 'hasPortalDocumentUpload', operator: 'is_false', value: null },
+    ];
+    draft.templateId = 'setup-reminder';
+
+    const preview = previewRuleDraft(draft, METRIC_CATALOG, TEMPLATE_FIXTURES);
+    expect(preview.lines[0]).toBe('When a client has not uploaded a document to the portal');
+  });
+
+  it('describes portal visit recency and counts with duration and number operators', () => {
+    const recency = emptyRuleDraft();
+    recency.name = 'Quiet portal';
+    recency.category = 'engagement';
+    recency.groupId = 'rg_engagement';
+    recency.sequenceOrder = 1;
+    recency.rootGroup.children = [
+      { id: '1', metricKey: 'daysSinceLastPortalVisit', operator: 'gt', value: 14 },
+    ];
+    recency.templateId = 'setup-reminder';
+    expect(previewRuleDraft(recency, METRIC_CATALOG, TEMPLATE_FIXTURES).lines[0]).toBe(
+      'When a client has not visited the portal for 14 days',
+    );
+
+    const count = emptyRuleDraft();
+    count.name = 'Visit count';
+    count.category = 'engagement';
+    count.groupId = 'rg_engagement';
+    count.sequenceOrder = 1;
+    count.rootGroup.children = [
+      { id: '1', metricKey: 'portalVisitCount', operator: 'gte', value: 3 },
+    ];
+    count.templateId = 'setup-reminder';
+    expect(previewRuleDraft(count, METRIC_CATALOG, TEMPLATE_FIXTURES).lines[0]).toBe(
+      'When portal visit count is at least 3',
+    );
+
+    const none = emptyRuleDraft();
+    none.name = 'No uploads';
+    none.category = 'engagement';
+    none.groupId = 'rg_engagement';
+    none.sequenceOrder = 1;
+    none.rootGroup.children = [
+      { id: '1', metricKey: 'portalDocumentUploadCount', operator: 'eq', value: 0 },
+    ];
+    none.templateId = 'setup-reminder';
+    expect(previewRuleDraft(none, METRIC_CATALOG, TEMPLATE_FIXTURES).lines[0]).toBe(
+      'When portal document upload count equals 0',
+    );
   });
 
   it('describes a one-off announcement with its send date and audience', () => {

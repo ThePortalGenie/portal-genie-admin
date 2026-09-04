@@ -9,14 +9,23 @@ const METRIC_EDITOR_LABELS: Record<string, string> = {
   daysUntilTrialExpiry: 'Days until trial expiry',
   accountStatus: 'Account status',
   logoUploaded: 'Company logo',
-  accountingSoftwareConnected: 'Accounting software',
-  lastPortalSignInAt: 'Portal sign-in',
-  daysSinceLastPortalSignIn: 'Days since last portal sign-in',
-  portalSignInCount: 'Portal sign-in count',
-  folderCount: 'Folder count',
+  lastPortalSignInAt: 'Admin sign-in',
+  daysSinceLastPortalSignIn: 'Days since last admin sign-in',
+  portalSignInCount: 'Admin sign-in count',
   hasCreatedFolder: 'Folder',
-  documentCount: 'Document count',
+  folderCount: 'Folder count',
   hasUploadedDocument: 'Document',
+  documentCount: 'Document count',
+  lastDocumentUploadedAt: 'Last document uploaded',
+  daysSinceLastDocumentUpload: 'Days since last document upload',
+  accountingSoftwareConnected: 'Accounting software',
+  hasPortalVisit: 'Portal visit',
+  daysSinceLastPortalVisit: 'Days since last portal visit',
+  portalVisitCount: 'Portal visit count',
+  hasPortalDocumentUpload: 'Portal document upload',
+  portalDocumentUploadCount: 'Portal document upload count',
+  lastPortalDocumentUploadedAt: 'Last portal document uploaded',
+  daysSinceLastPortalDocumentUpload: 'Days since last portal document upload',
   hasCreatedScheduledEmailTemplate: 'Scheduled email template',
 };
 
@@ -25,6 +34,8 @@ const BOOLEAN_VALUE_LABELS: Record<string, { yes: string; no: string }> = {
   accountingSoftwareConnected: { yes: 'is connected', no: 'is not connected' },
   hasCreatedFolder: { yes: 'has been created', no: 'has not been created' },
   hasUploadedDocument: { yes: 'has been uploaded', no: 'has not been uploaded' },
+  hasPortalVisit: { yes: 'has occurred', no: 'has not occurred' },
+  hasPortalDocumentUpload: { yes: 'has occurred', no: 'has not occurred' },
   hasCreatedScheduledEmailTemplate: { yes: 'has been created', no: 'has not been created' },
 };
 
@@ -39,7 +50,7 @@ export const EDITOR_OPERATOR_LABELS: Record<MetricOperator, string> = {
   lt: 'is less than',
   lte: 'is less than or equal to',
   between: 'is between',
-  is_empty: 'has not happened',
+  is_empty: 'has not occurred',
 };
 
 export function metricEditorLabel(metric: CustomerMetric): string {
