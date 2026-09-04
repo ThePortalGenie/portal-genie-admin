@@ -45,3 +45,7 @@ Thumbs.db
 
 # TypeScript build cache
 *.tsbuildinfo
+
+# TypeScript emitted files in source tree
+src/**/*.js
+src/**/*.js.map
