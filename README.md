@@ -6,7 +6,7 @@ Frontend-only Angular app. APIs, databases, authentication, and email delivery w
 
 ## Current implementation status
 
-**Phase 4B — Rule groups.** The Rules landing page presents journeys (Trial & Onboarding, Adoption, Engagement, Announcements). `/engagement/rules/group/:groupId` shows a display sequence. `groupId` and `sequenceOrder` are organisational metadata only; they do not control evaluation or send order.
+**Phase 4D — Journey sequencing.** The rule editor arranges a rule visually in its group. `sequenceOrder` is derived from that position and remains organisational metadata only.
 
 Still not built: template library UI, Customer Usage, Settings, HTTP APIs, authentication, email delivery, nested condition-group UI, recipient preview.
 

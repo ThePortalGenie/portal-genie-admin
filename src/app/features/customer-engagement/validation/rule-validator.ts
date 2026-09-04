@@ -35,10 +35,16 @@ export function validateRuleDraft(
   }
 
   if (draft.sequenceOrder === null || draft.sequenceOrder === undefined) {
-    errors.push(issue('rule.sequence.required', 'Enter a position in this group', 'sequenceOrder'));
+    errors.push(
+      issue('rule.sequence.required', 'Place this rule in the journey sequence', 'sequenceOrder'),
+    );
   } else if (!Number.isInteger(draft.sequenceOrder) || draft.sequenceOrder < 1) {
     errors.push(
-      issue('rule.sequence.invalid', 'Enter a whole number of 1 or more', 'sequenceOrder'),
+      issue(
+        'rule.sequence.invalid',
+        'Journey position must be a whole number of 1 or more',
+        'sequenceOrder',
+      ),
     );
   }
 

@@ -1,17 +1,17 @@
 :host {
   display: block;
+  container-type: inline-size;
+  container-name: editor;
 }
 
 .editor-status {
   color: var(--color-text-muted);
 }
 
-.editor {
-  max-width: 52rem;
-}
-
-.editor-section {
-  margin-bottom: var(--space-10);
+.editor-layout {
+  display: grid;
+  grid-template-columns: minmax(0, 1fr);
+  gap: var(--space-8);
 }
 
 .editor-section h2 {
@@ -41,8 +41,9 @@
   margin-bottom: var(--space-4);
 }
 
-.details-position .pg-control {
-  max-width: 6rem;
+.details-group {
+  max-width: 16rem;
+  margin-bottom: var(--space-4);
 }
 
 .details-description {
@@ -60,7 +61,6 @@
   display: flex;
   flex-direction: column;
   gap: var(--space-3);
-  margin-top: var(--space-8);
   padding: var(--space-4) 0;
   background: var(--color-canvas);
   border-top: 1px solid var(--color-border);
@@ -72,9 +72,54 @@
   gap: var(--space-2);
 }
 
+@container editor (min-width: 70rem) {
+  .editor-layout {
+    grid-template-columns: minmax(0, 1fr) minmax(18rem, 22rem);
+    grid-template-areas:
+      'details journey'
+      'when journey'
+      'then journey'
+      'summary journey'
+      'footer journey';
+    align-items: start;
+  }
+
+  .editor-details {
+    grid-area: details;
+  }
+
+  .editor-when {
+    grid-area: when;
+  }
+
+  .editor-then {
+    grid-area: then;
+  }
+
+  .editor-summary {
+    grid-area: summary;
+  }
+
+  .editor-footer {
+    grid-area: footer;
+  }
+
+  .editor-journey {
+    grid-area: journey;
+    position: sticky;
+    top: var(--space-4);
+    max-height: calc(100vh - var(--space-8));
+    overflow: auto;
+  }
+}
+
 @media (max-width: 39.99rem) {
   .details-secondary {
     grid-template-columns: 1fr;
+  }
+
+  .details-group {
+    max-width: none;
   }
 
   .editor-footer__actions {

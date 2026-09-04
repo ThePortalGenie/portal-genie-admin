@@ -231,6 +231,8 @@ Keep this as frontend catalog data (same pattern as metrics), not literals in te
 
 A rule stores `groupId` and `sequenceOrder`. `sequenceOrder` is **display and organisational ordering only**. It does not mean “rule 2 runs after rule 1”, and it does not affect eligibility, timing, evaluation, or send behaviour. Those remain on the rule definition. The backend must not treat group sequence as an execution graph.
 
+Administrators set `sequenceOrder` in the rule editor by placing the current rule in the **Journey sequence** panel (drag or Move up / Move down). They do not type a position number. Chronological sequence warnings compare lifecycle offsets only when both rules share the same timing anchor; they never block save.
+
 ### D10 — Trial and account status values are temporary mock contracts (approved for frontend)
 
 **Decision:** Use the following for mock/catalog enum values until the backend publishes authoritative lists:

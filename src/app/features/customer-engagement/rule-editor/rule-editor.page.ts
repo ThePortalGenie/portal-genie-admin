@@ -39,7 +39,15 @@ import { previewRuleDraft } from '../validation/editor-summary';
 import { validateRuleDraft } from '../validation/rule-validator';
 import { ConditionFormGroup } from './condition-form';
 import { ConditionList } from './condition-list.component';
+import {
+  buildJourneySequence,
+  clampPlacementIndex,
+  sequenceOrderFromVisualIndex,
+  siblingRulesForGroup,
+  visualIndexFromSequence,
+} from '../rules/journey-sequence';
 import { draftForCreate, sequenceForGroupChange } from './create-defaults';
+import { JourneySequencePanel } from './journey-sequence-panel.component';
 import {
   draftPartsFromEditorRows,
   editorRowFromCondition,
@@ -72,6 +80,7 @@ type EditorLoadState = 'loading' | 'ready' | 'error' | 'not-found';
     ConditionList,
     TemplatePicker,
     RuleSummaryCard,
+    JourneySequencePanel,
   ],
   changeDetection: ChangeDetectionStrategy.OnPush,
   templateUrl: './rule-editor.page.html',
@@ -102,6 +111,7 @@ export class RuleEditorPage {
   protected readonly saving = signal(false);
   protected readonly saveError = signal(false);
   private readonly initialDraft = signal(emptyRuleDraft());
+  private readonly placementIndex = signal(0);
 
   private readonly ruleId = toSignal(this.route.paramMap.pipe(map((params) => params.get('id'))), {
     initialValue: this.route.snapshot.paramMap.get('id'),
@@ -173,6 +183,18 @@ export class RuleEditorPage {
     previewRuleDraft(this.draft(), this.metrics(), this.templates()),
   );
 
+  protected readonly journeyView = computed(() =>
+    buildJourneySequence({
+      groupId: this.draft().groupId,
+      groups: this.groups(),
+      rules: this.existingRules(),
+      currentRuleId: this.ruleId(),
+      draft: this.draft(),
+      placementIndex: this.placementIndex(),
+      isCreate: this.isCreate(),
+    }),
+  );
+
   protected readonly dirty = computed(() => !draftsAreEqual(this.draft(), this.initialDraft()));
   protected readonly canSave = computed(() => this.validation().isValid && !this.saving());
   protected readonly allIssues = computed(() => [
@@ -199,9 +221,7 @@ export class RuleEditorPage {
           ? this.form.controls.category
           : path === 'groupId'
             ? this.form.controls.groupId
-            : path === 'sequenceOrder'
-              ? this.form.controls.sequenceOrder
-              : null;
+            : null;
     if (!this.submitted() && control && !control.touched) {
       return undefined;
     }
@@ -211,6 +231,8 @@ export class RuleEditorPage {
   protected onGroupChange(): void {
     const nextGroupId = this.form.controls.groupId.value;
     if (!nextGroupId) {
+      this.form.controls.sequenceOrder.setValue(null);
+      this.placementIndex.set(0);
       return;
     }
     const sequence = sequenceForGroupChange(
@@ -220,6 +242,14 @@ export class RuleEditorPage {
       this.form.controls.sequenceOrder.value,
     );
     this.form.controls.sequenceOrder.setValue(sequence);
+    this.syncPlacementIndex(nextGroupId, sequence);
+  }
+
+  protected moveCurrentToIndex(index: number): void {
+    const next = clampPlacementIndex(index, this.journeyView().items.length);
+    this.placementIndex.set(next);
+    this.form.controls.sequenceOrder.setValue(sequenceOrderFromVisualIndex(next));
+    this.form.controls.sequenceOrder.markAsDirty();
   }
 
   protected addCondition(): void {
@@ -346,8 +376,14 @@ export class RuleEditorPage {
       combinator: draft.rootGroup.combinator,
       templateId: draft.templateId,
     });
+    this.syncPlacementIndex(draft.groupId, draft.sequenceOrder);
     this.form.markAsPristine();
     this.initialDraft.set(this.toDraft());
+  }
+
+  private syncPlacementIndex(groupId: string, sequenceOrder: number | null): void {
+    const others = siblingRulesForGroup(this.existingRules(), groupId, this.ruleId());
+    this.placementIndex.set(visualIndexFromSequence(others, sequenceOrder));
   }
 
   private conditionGroup(row: EditorConditionRow): ConditionFormGroup {

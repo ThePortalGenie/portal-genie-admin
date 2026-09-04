@@ -1,0 +1,131 @@
+<aside class="journey-panel" aria-labelledby="journey-heading">
+  <h2 id="journey-heading">Journey sequence</h2>
+
+  @if (!hasGroup()) {
+    <p class="journey-panel__empty">
+      Choose a rule group to arrange this rule in a journey.
+    </p>
+  } @else {
+    <p class="journey-panel__group">{{ groupName() }}</p>
+    <p class="journey-panel__help">{{ helperText() }}</p>
+    @if (items().length > 1) {
+      <p class="journey-panel__hint">Drag this rule to where it belongs.</p>
+    }
+
+    <p class="visually-hidden" aria-live="polite">{{ positionAnnouncement() }}</p>
+
+    <ol
+      class="journey-seq"
+      [class.journey-seq--dragging]="dragging()"
+      aria-label="Journey sequence"
+    >
+      @for (item of items(); track item.id; let index = $index; let last = $last) {
+        <li
+          class="journey-seq__item"
+          [class.journey-seq__item--current]="item.isCurrent"
+          [class.journey-seq__item--disabled]="item.isDisabled"
+          [class.journey-seq__item--conflict]="!!item.conflict"
+          [class.journey-seq__item--drop]="dropIndex() === index"
+          [class.journey-seq__item--last]="last"
+          [attr.aria-current]="item.isCurrent ? 'true' : null"
+          (dragover)="onDragOver($event, index)"
+          (drop)="onDrop($event, index)"
+          (dragend)="onDragEnd()"
+        >
+          <div class="journey-seq__index" aria-hidden="true">{{ item.indexLabel }}</div>
+          <div class="journey-seq__body">
+            <div class="journey-seq__row">
+              @if (item.isCurrent) {
+                <span
+                  class="journey-seq__grip"
+                  draggable="true"
+                  aria-hidden="true"
+                  title="Drag to reorder"
+                  (dragstart)="onDragStart($event, index)"
+                >
+                  <svg
+                    xmlns="http://www.w3.org/2000/svg"
+                    width="16"
+                    height="16"
+                    viewBox="0 0 24 24"
+                    fill="none"
+                    stroke="currentColor"
+                    stroke-width="2"
+                    stroke-linecap="round"
+                    stroke-linejoin="round"
+                  >
+                    <circle cx="9" cy="5" r="1" />
+                    <circle cx="9" cy="12" r="1" />
+                    <circle cx="9" cy="19" r="1" />
+                    <circle cx="15" cy="5" r="1" />
+                    <circle cx="15" cy="12" r="1" />
+                    <circle cx="15" cy="19" r="1" />
+                  </svg>
+                </span>
+              }
+              <div class="journey-seq__copy">
+                <p class="journey-seq__name">{{ item.name }}</p>
+                <p class="journey-seq__timing">{{ item.timingLabel }}</p>
+              </div>
+            </div>
+
+            @if (item.isCurrent) {
+              <p class="journey-seq__badge">This rule</p>
+              <div class="journey-seq__actions">
+                <ui-button
+                  variant="secondary"
+                  size="compact"
+                  [disabled]="!canMoveUp()"
+                  ariaLabel="Move this rule up"
+                  (click)="moveUp()"
+                >
+                  Move up
+                </ui-button>
+                <ui-button
+                  variant="secondary"
+                  size="compact"
+                  [disabled]="!canMoveDown()"
+                  ariaLabel="Move this rule down"
+                  (click)="moveDown()"
+                >
+                  Move down
+                </ui-button>
+              </div>
+            }
+
+            @if (item.isDisabled && !item.isCurrent) {
+              <p class="journey-seq__status">Disabled</p>
+            }
+
+            @if (item.conflict; as conflict) {
+              <div class="journey-seq__warning" role="status">
+                <p class="journey-seq__warning-title">
+                  <svg
+                    class="journey-seq__warning-icon"
+                    xmlns="http://www.w3.org/2000/svg"
+                    width="16"
+                    height="16"
+                    viewBox="0 0 24 24"
+                    fill="none"
+                    stroke="currentColor"
+                    stroke-width="2"
+                    stroke-linecap="round"
+                    stroke-linejoin="round"
+                    aria-hidden="true"
+                  >
+                    <path d="m21.73 18-8-14a2 2 0 0 0-3.48 0l-8 14A2 2 0 0 0 4 21h16a2 2 0 0 0 1.73-3" />
+                    <path d="M12 9v4" />
+                    <path d="M12 17h.01" />
+                  </svg>
+                  Sequence conflict
+                </p>
+                <p>{{ conflict.detail }}</p>
+                <p>{{ conflict.suggestion }}</p>
+              </div>
+            }
+          </div>
+        </li>
+      }
+    </ol>
+  }
+</aside>

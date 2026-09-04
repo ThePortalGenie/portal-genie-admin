@@ -55,6 +55,15 @@ describe('MockRuleService', () => {
     expect(listed[0]?.id).toBe(created.id);
     expect(created.groupId).toBe('rg_announcements');
     expect(created.sequenceOrder).toBe(2);
+    const announcements = listed
+      .filter((rule) => rule.groupId === 'rg_announcements')
+      .sort((left, right) => left.sequenceOrder - right.sequenceOrder);
+    expect(announcements.map((rule) => rule.name)).toEqual([
+      'New Feature Available',
+      'Brand new rule',
+      'Portal Genie Product Update',
+    ]);
+    expect(announcements.map((rule) => rule.sequenceOrder)).toEqual([1, 2, 3]);
   });
 
   it('updates an existing rule', async () => {

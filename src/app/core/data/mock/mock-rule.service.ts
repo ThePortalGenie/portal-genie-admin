@@ -10,8 +10,9 @@ import {
   RuleDraft,
 } from '../../../features/customer-engagement/models/rule.model';
 import { ruleFromDraft } from '../../../features/customer-engagement/rule-editor/rule-draft.helpers';
-import { RuleService } from '../rule.service';
+import { placeRuleInGroupSequence } from '../../../features/customer-engagement/rules/journey-sequence';
 import { nextSequenceOrder } from '../../../features/customer-engagement/rules/rule-group.helpers';
+import { RuleService } from '../rule.service';
 import { RULE_FIXTURES } from './fixtures/rules.fixture';
 import { mockNotFound, mockOf, mockVoid } from './mock-async';
 
@@ -35,8 +36,9 @@ export class MockRuleService extends RuleService {
       createdAt: now,
       updatedAt: now,
     });
-    this.rules.unshift(rule);
-    return mockOf(rule);
+    this.rules = placeRuleInGroupSequence([rule, ...this.rules], rule);
+    const placed = this.rules.find((item) => item.id === rule.id) ?? rule;
+    return mockOf(placed);
   }
 
   override update(id: string, draft: RuleDraft): Observable<Rule> {
@@ -51,8 +53,12 @@ export class MockRuleService extends RuleService {
       createdAt: existing.createdAt,
       updatedAt: new Date().toISOString(),
     });
-    this.rules[index] = rule;
-    return mockOf(rule);
+    this.rules = placeRuleInGroupSequence(
+      this.rules.map((item) => (item.id === id ? rule : item)),
+      rule,
+    );
+    const placed = this.rules.find((item) => item.id === id) ?? rule;
+    return mockOf(placed);
   }
 
   override duplicate(id: string): Observable<Rule> {

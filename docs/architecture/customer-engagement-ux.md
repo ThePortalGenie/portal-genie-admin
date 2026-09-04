@@ -141,17 +141,19 @@ Cancel: if the form is dirty, confirm “Discard unsaved changes?”. If clean, 
 Breadcrumb
 Title + Cancel + Save rule
 
-On wide screens (≥1280px):
+On wide screens (when the editor has room for a second column):
 
 ┌─────────────────────────────┬──────────────────────┐
-│ Form column (~800px max)    │ Sticky summary card  │
-│ 1. Rule details             │ Plain-language rule  │
-│ 2. Conditions               │ Validation list      │
-│ 3. Communication            │                      │
-│ 4. Timing                   │                      │
+│ Form column                 │ Journey sequence     │
+│ 1. Rule details             │ Selected group,      │
+│ 2. When                     │ drag this rule,      │
+│ 3. Then                     │ sequence warnings    │
+│ 4. This rule will…          │                      │
 └─────────────────────────────┴──────────────────────┘
 
-Below 1280px: summary + validation stack above or below the form, not a second scroll trap.
+On tablet/mobile: Journey sequence sits directly under Rule details, then When / Then / summary. Do not squeeze the form to keep two columns.
+
+`sequenceOrder` is derived from the visual position. Administrators do not type a position number. Sequence conflicts are warnings and do not block Save.
 ```
 
 The summary is not a recipient preview. It is a sentence restating the current draft.
@@ -164,7 +166,7 @@ The summary is not a recipient preview. It is a sentence restating the current d
 | Description | No | Textarea, 2–3 rows |
 | Category | Yes | Select: **rule** categories (Onboarding, Adoption, Engagement, Conversion, Announcement, Other). Not template categories. Not rule groups. Help: “Describes the purpose of this rule.” No “None”. |
 | Rule group | Yes | Select: Trial & Onboarding, Adoption, Engagement, Announcements. Help: “Organises related rules into a customer journey.” Preselected when Create is launched from a group page. |
-| Position in group | Yes | Integer ≥ 1. Display order only. Defaults to the end of the selected group on create. Does not control send order. |
+| Journey sequence | Yes (derived) | Right-hand (or below details) visual sequence. Drag or Move up / Move down the current rule. `sequenceOrder` is calculated from that position. Display order only; does not control send order. |
 | Status | Yes | Segmented control or select: Disabled / Active |
 
 New rules default to **Disabled** so an incomplete thought is not activated by accident. Administrators set Active before save when the rule is valid.

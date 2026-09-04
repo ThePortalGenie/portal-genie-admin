@@ -26,6 +26,12 @@ describe('draftsAreEqual', () => {
     expect(draftsAreEqual(original, original)).toBe(true);
     expect(draftsAreEqual(original, edited)).toBe(false);
   });
+
+  it('treats a changed journey position as unsaved so Cancel can discard it', () => {
+    const original = { ...emptyRuleDraft(), sequenceOrder: 8 };
+    const moved = { ...original, sequenceOrder: 3 };
+    expect(draftsAreEqual(original, moved)).toBe(false);
+  });
 });
 
 describe('draftFromRule', () => {
