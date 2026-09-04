@@ -13,6 +13,7 @@ Portal Genie Admin
 │
 ├── Customer Engagement
 │   ├── /engagement/rules            Rules landing (groups + all rules)
+│   ├── /engagement/rules/journey    Global customer communication journey
 │   ├── /engagement/rules/group/:id  Rule group journey
 │   ├── /engagement/rules/new        Create rule
 │   ├── /engagement/rules/:id        Edit rule
@@ -39,6 +40,7 @@ Reserved Usage and Settings URLs should not be linked. If typed, show a short �
 | --- | --- | --- | --- |
 | `/` | Redirect | — | — |
 | `/engagement/rules` | Rules landing | Rules | Customer Engagement / Rules |
+| `/engagement/rules/journey` | Global journey | Rules | Customer Engagement / Rules / Global journey |
 | `/engagement/rules/group/:groupId` | Rule group journey | Rules | Customer Engagement / Rules / {group name} |
 | `/engagement/rules/new` | Rule editor (create) | Rules | Customer Engagement / Rules / Create rule (or via the group) |
 | `/engagement/rules/:id` | Rule editor (edit) | Rules | Customer Engagement / Rules / {rule name} |

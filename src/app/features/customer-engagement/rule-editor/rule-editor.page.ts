@@ -47,6 +47,7 @@ import {
   visualIndexFromSequence,
 } from '../rules/journey-sequence';
 import { draftForCreate, sequenceForGroupChange } from './create-defaults';
+import { editorReturnCommands, editorReturnContext } from './editor-navigation';
 import { JourneySequencePanel } from './journey-sequence-panel.component';
 import {
   draftPartsFromEditorRows,
@@ -119,12 +120,10 @@ export class RuleEditorPage {
 
   protected readonly isCreate = computed(() => this.ruleId() === null);
 
-  private readonly returnGroupId = toSignal(
-    this.route.queryParamMap.pipe(map((params) => params.get('fromGroup') ?? params.get('group'))),
+  private readonly returnContext = toSignal(
+    this.route.queryParamMap.pipe(map((params) => editorReturnContext(params))),
     {
-      initialValue:
-        this.route.snapshot.queryParamMap.get('fromGroup') ??
-        this.route.snapshot.queryParamMap.get('group'),
+      initialValue: editorReturnContext(this.route.snapshot.queryParamMap),
     },
   );
 
@@ -133,13 +132,20 @@ export class RuleEditorPage {
       { label: 'Customer Engagement' },
       { label: 'Rules', routerLink: '/engagement/rules' },
     ];
-    const groupId = this.returnGroupId();
-    const group = this.groups().find((item) => item.id === groupId);
-    if (group) {
+    const context = this.returnContext();
+    if (context.fromJourney) {
       items.push({
-        label: group.name,
-        routerLink: `/engagement/rules/group/${group.id}`,
+        label: 'Global journey',
+        routerLink: '/engagement/rules/journey',
       });
+    } else {
+      const group = this.groups().find((item) => item.id === context.groupId);
+      if (group) {
+        items.push({
+          label: group.name,
+          routerLink: `/engagement/rules/group/${group.id}`,
+        });
+      }
     }
     items.push({ label: this.isCreate() ? 'Create rule' : 'Edit rule' });
     return items;
@@ -419,11 +425,7 @@ export class RuleEditorPage {
   }
 
   private returnCommands(): string[] {
-    const groupId = this.returnGroupId();
-    if (groupId) {
-      return ['/engagement/rules/group', groupId];
-    }
-    return ['/engagement/rules'];
+    return editorReturnCommands(this.returnContext());
   }
 
   private editorRows(): EditorConditionRow[] {

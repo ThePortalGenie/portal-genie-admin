@@ -13,11 +13,12 @@ import { RuleGroupService } from '../../../core/data/rule-group.service';
 import { RuleService } from '../../../core/data/rule.service';
 import { TemplateService } from '../../../core/data/template.service';
 import { CustomerMetric } from '../../../core/domain/metric.types';
-import { RULE_CATEGORY_OPTIONS } from '../../../core/domain/rule-category';
 import { RuleGroup } from '../../../core/domain/rule-group';
 import { RULE_STATUS_LABELS, RULE_STATUSES } from '../../../core/domain/rule-status';
 import { CommunicationTemplate } from '../../../core/domain/template.types';
 import { PageHeader } from '../../../layout/page-header/page-header.component';
+import { FROM_JOURNEY_PARAM } from '../rule-editor/editor-navigation';
+import { BreadcrumbItem } from '../../../shared/ui/breadcrumb/breadcrumb.model';
 import { UiButton } from '../../../shared/ui/button/button.component';
 import { ConfirmDialog } from '../../../shared/ui/confirm-dialog/confirm-dialog.component';
 import { EmptyState } from '../../../shared/ui/empty-state/empty-state.component';
@@ -25,35 +26,19 @@ import { ErrorState } from '../../../shared/ui/error-state/error-state.component
 import { SearchField } from '../../../shared/ui/search-field/search-field.component';
 import { StatusBadge } from '../../../shared/ui/status-badge/status-badge.component';
 import { Rule } from '../models/rule.model';
-import { summariseRule } from '../validation/rule-summary';
-import { formatIsoDate } from './format-iso-date';
-import { groupOverviews, RuleGroupOverview } from './rule-group.helpers';
-import { globalJourneyOverview, GlobalJourneyOverview } from './global-journey';
+import { RuleActionsMenu } from './rule-actions-menu.component';
 import {
-  DEFAULT_RULE_LIST_FILTERS,
-  filterRules,
-  isRuleListFiltered,
-  RULE_FILTER_ALL,
-  RuleCategoryFilter,
-  ruleListCounts,
-  RuleListFilters,
-  RuleStatusFilter,
-} from './rule-list.filters';
+  AUTOMATED_JOURNEY_GROUP_IDS,
+  buildGlobalJourney,
+  DEFAULT_GLOBAL_JOURNEY_FILTERS,
+  isGlobalJourneyFiltered,
+} from './global-journey';
+import { RULE_FILTER_ALL, RuleStatusFilter } from './rule-list.filters';
 
 type LoadState = 'loading' | 'loaded' | 'error';
 
-type RuleRow = {
-  rule: Rule;
-  categoryLabel: string;
-  groupLabel: string;
-  summary: string;
-  templateName: string;
-  updatedLabel: string;
-  enableLabel: string;
-};
-
 @Component({
-  selector: 'app-rules-list-page',
+  selector: 'app-global-journey-page',
   imports: [
     PageHeader,
     UiButton,
@@ -63,12 +48,13 @@ type RuleRow = {
     SearchField,
     StatusBadge,
     RouterLink,
+    RuleActionsMenu,
   ],
   changeDetection: ChangeDetectionStrategy.OnPush,
-  templateUrl: './rules-list.page.html',
-  styleUrl: './rules-list.page.scss',
+  templateUrl: './global-journey.page.html',
+  styleUrl: './global-journey.page.scss',
 })
-export class RulesListPage {
+export class GlobalJourneyPage {
   private readonly router = inject(Router);
   private readonly ruleService = inject(RuleService);
   private readonly ruleGroupService = inject(RuleGroupService);
@@ -76,9 +62,10 @@ export class RulesListPage {
   private readonly metricCatalogService = inject(MetricCatalogService);
   private readonly confirmDialog = viewChild.required(ConfirmDialog);
 
-  protected readonly breadcrumbs = [
+  protected readonly breadcrumbs: BreadcrumbItem[] = [
     { label: 'Customer Engagement' },
-    { label: 'Rules' },
+    { label: 'Rules', routerLink: '/engagement/rules' },
+    { label: 'Global journey' },
   ];
 
   protected readonly loadState = signal<LoadState>('loading');
@@ -86,11 +73,9 @@ export class RulesListPage {
   protected readonly groups = signal<readonly RuleGroup[]>([]);
   protected readonly templates = signal<readonly CommunicationTemplate[]>([]);
   protected readonly metrics = signal<readonly CustomerMetric[]>([]);
-  protected readonly query = signal(DEFAULT_RULE_LIST_FILTERS.query);
-  protected readonly statusFilter = signal<RuleStatusFilter>(DEFAULT_RULE_LIST_FILTERS.status);
-  protected readonly categoryFilter = signal<RuleCategoryFilter>(
-    DEFAULT_RULE_LIST_FILTERS.category,
-  );
+  protected readonly query = signal(DEFAULT_GLOBAL_JOURNEY_FILTERS.query);
+  protected readonly statusFilter = signal<RuleStatusFilter>(DEFAULT_GLOBAL_JOURNEY_FILTERS.status);
+  protected readonly groupFilter = signal<string>(DEFAULT_GLOBAL_JOURNEY_FILTERS.groupId);
   protected readonly pendingRuleId = signal<string | null>(null);
 
   protected readonly statusFilterOptions = [
@@ -98,53 +83,31 @@ export class RulesListPage {
     ...RULE_STATUSES.map((id) => ({ id, label: RULE_STATUS_LABELS[id] })),
   ];
 
-  protected readonly categoryFilterOptions = [
+  protected readonly groupFilterOptions = computed(() => [
     { id: RULE_FILTER_ALL, label: 'All' },
-    ...RULE_CATEGORY_OPTIONS,
-  ];
+    ...this.groups()
+      .filter((group) => (AUTOMATED_JOURNEY_GROUP_IDS as readonly string[]).includes(group.id))
+      .sort((left, right) => left.displayOrder - right.displayOrder)
+      .map((group) => ({ id: group.id, label: group.name })),
+  ]);
 
-  private readonly filters = computed<RuleListFilters>(() => ({
+  private readonly filters = computed(() => ({
     query: this.query(),
     status: this.statusFilter(),
-    category: this.categoryFilter(),
+    groupId: this.groupFilter(),
   }));
 
-  private readonly templateNameById = computed(() => {
-    const names = new Map<string, string>();
-    for (const template of this.templates()) {
-      names.set(template.id, template.name);
-    }
-    return names;
-  });
+  protected readonly filtered = computed(() => isGlobalJourneyFiltered(this.filters()));
 
-  protected readonly counts = computed(() => ruleListCounts(this.rules()));
-  protected readonly automatedJourney = computed((): GlobalJourneyOverview =>
-    globalJourneyOverview(this.rules()),
+  protected readonly view = computed(() =>
+    buildGlobalJourney({
+      rules: this.rules(),
+      groups: this.groups(),
+      metrics: this.metrics(),
+      templates: this.templates(),
+      filters: this.filters(),
+    }),
   );
-  protected readonly groupCards = computed((): RuleGroupOverview[] =>
-    groupOverviews(this.groups(), this.rules()),
-  );
-  protected readonly filtered = computed(() => isRuleListFiltered(this.filters()));
-  protected readonly visibleRules = computed(() =>
-    filterRules(this.rules(), this.filters(), this.templateNameById()),
-  );
-
-  protected readonly rows = computed((): RuleRow[] => {
-    const metrics = this.metrics();
-    const templateNames = this.templateNameById();
-    const categories = new Map(RULE_CATEGORY_OPTIONS.map((option) => [option.id, option.label]));
-    const groupNames = new Map(this.groups().map((group) => [group.id, group.name]));
-
-    return this.visibleRules().map((rule) => ({
-      rule,
-      categoryLabel: categories.get(rule.category) ?? rule.category,
-      groupLabel: groupNames.get(rule.groupId) ?? 'Ungrouped',
-      summary: summariseRule(rule, metrics),
-      templateName: templateNames.get(rule.templateId) ?? 'Unknown template',
-      updatedLabel: formatIsoDate(rule.updatedAt),
-      enableLabel: rule.status === 'active' ? 'Disable' : 'Enable',
-    }));
-  });
 
   constructor() {
     this.load();
@@ -165,36 +128,32 @@ export class RulesListPage {
         this.metrics.set(metrics);
         this.loadState.set('loaded');
       },
-      error: () => {
-        this.loadState.set('error');
-      },
+      error: () => this.loadState.set('error'),
     });
   }
 
-  protected ruleCountLabel(count: number): string {
-    return count === 1 ? '1 rule' : `${count} rules`;
-  }
-
-  protected createRule(): void {
-    void this.router.navigate(['/engagement/rules/new']);
+  protected backToRules(): void {
+    void this.router.navigate(['/engagement/rules']);
   }
 
   protected editRule(rule: Rule): void {
-    void this.router.navigate(['/engagement/rules', rule.id]);
+    void this.router.navigate(['/engagement/rules', rule.id], {
+      queryParams: { [FROM_JOURNEY_PARAM]: '1' },
+    });
   }
 
   protected onStatusFilterChange(event: Event): void {
     this.statusFilter.set((event.target as HTMLSelectElement).value as RuleStatusFilter);
   }
 
-  protected onCategoryFilterChange(event: Event): void {
-    this.categoryFilter.set((event.target as HTMLSelectElement).value as RuleCategoryFilter);
+  protected onGroupFilterChange(event: Event): void {
+    this.groupFilter.set((event.target as HTMLSelectElement).value);
   }
 
   protected clearFilters(): void {
-    this.query.set(DEFAULT_RULE_LIST_FILTERS.query);
-    this.statusFilter.set(DEFAULT_RULE_LIST_FILTERS.status);
-    this.categoryFilter.set(DEFAULT_RULE_LIST_FILTERS.category);
+    this.query.set(DEFAULT_GLOBAL_JOURNEY_FILTERS.query);
+    this.statusFilter.set(DEFAULT_GLOBAL_JOURNEY_FILTERS.status);
+    this.groupFilter.set(DEFAULT_GLOBAL_JOURNEY_FILTERS.groupId);
   }
 
   protected duplicate(rule: Rule): void {
@@ -241,18 +200,14 @@ export class RulesListPage {
     request.subscribe({
       next: () => {
         this.pendingRuleId.set(null);
-        this.refreshRules();
+        this.ruleService.list().subscribe({
+          next: (rules) => this.rules.set(rules),
+          error: () => this.loadState.set('error'),
+        });
       },
       error: () => {
         this.pendingRuleId.set(null);
       },
-    });
-  }
-
-  private refreshRules(): void {
-    this.ruleService.list().subscribe({
-      next: (rules) => this.rules.set(rules),
-      error: () => this.loadState.set('error'),
     });
   }
 }

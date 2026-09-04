@@ -41,6 +41,7 @@ export type Rule = {
   /**
    * Display position within the rule’s group.
    * Administrative ordering only — not send sequence or dependency.
+   * There is no globalSequenceOrder; the global journey derives order from timing.
    */
   sequenceOrder: number;
   status: RuleStatus;

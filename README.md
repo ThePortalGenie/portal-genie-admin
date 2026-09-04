@@ -6,7 +6,7 @@ Frontend-only Angular app. APIs, databases, authentication, and email delivery w
 
 ## Current implementation status
 
-**Phase 4D — Journey sequencing.** The rule editor arranges a rule visually in its group. `sequenceOrder` is derived from that position and remains organisational metadata only.
+**Phase 4E — Global journey.** `/engagement/rules/journey` is a derived planning view of Trial & Onboarding, Adoption, and Engagement. It is not a Rule Group and has no `globalSequenceOrder`. Announcements stay in their own group.
 
 Still not built: template library UI, Customer Usage, Settings, HTTP APIs, authentication, email delivery, nested condition-group UI, recipient preview.
 
@@ -54,7 +54,8 @@ This runs `tsc -p tsconfig.typecheck.json --noEmit`. Application `tsconfig` file
 | Path | Page |
 | --- | --- |
 | `/` | Redirect to `/engagement/rules` |
-| `/engagement/rules` | Rules landing: group cards + all-rules table |
+| `/engagement/rules` | Rules landing: global journey card + group cards + all-rules table |
+| `/engagement/rules/journey` | Global customer communication journey (derived, not a Rule Group) |
 | `/engagement/rules/group/:groupId` | Rule group journey (display sequence) |
 | `/engagement/rules/new` | Create Rule (`?group=` preselects a group) |
 | `/engagement/rules/:id` | Edit Rule (loads the mock rule; unknown ids show not found) |

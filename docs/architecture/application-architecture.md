@@ -233,6 +233,10 @@ A rule stores `groupId` and `sequenceOrder`. `sequenceOrder` is **display and or
 
 Administrators set `sequenceOrder` in the rule editor by placing the current rule in the **Journey sequence** panel (drag or Move up / Move down). They do not type a position number. Chronological sequence warnings compare lifecycle offsets only when both rules share the same timing anchor; they never block save.
 
+### D16 — Global journey is derived, not a Rule Group (Phase 4E)
+
+**Decision:** `/engagement/rules/journey` combines Trial & Onboarding, Adoption, and Engagement into one planning view. It is **not** a persisted Rule Group and has no `groupId` and no `globalSequenceOrder`. Announcements stay out of this view. Display order is calculated from comparable lifecycle timing. Behavioural rules are shown without inventing a calendar day. Communication clusters (same anchor and offset, active rules only) and sequence conflicts are warnings only. The group-specific editor journey panel is unchanged.
+
 ### D10 — Trial and account status values are temporary mock contracts (approved for frontend)
 
 **Decision:** Use the following for mock/catalog enum values until the backend publishes authoritative lists:

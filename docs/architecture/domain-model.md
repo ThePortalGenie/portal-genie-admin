@@ -237,7 +237,7 @@ Persisted (or mock-persisted) engagement rule.
 | `description` | Optional |
 | `category` | Required `RuleCategory` (not a template category, not a rule group) |
 | `groupId` | Required opaque Rule Group id |
-| `sequenceOrder` | Integer ≥ 1. Display position within the group only — not execution order |
+| `sequenceOrder` | Integer ≥ 1. Display position within the group only — not execution order. There is no `globalSequenceOrder`. |
 | `status` | `RuleStatus` |
 | `rootGroup` | `RuleConditionGroup` |
 | `templateId` | Communication template id |

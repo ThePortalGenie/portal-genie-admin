@@ -53,6 +53,24 @@
       </div>
 
       <div class="group-grid">
+        <article class="group-card group-card--global">
+          <h3 class="group-card__title">All automated communications</h3>
+          <p class="group-card__description">
+            See onboarding, adoption and engagement communications together as one customer
+            journey.
+          </p>
+          @if (automatedJourney().span) {
+            <p class="group-card__span">{{ automatedJourney().span }}</p>
+          }
+          <p class="group-card__counts">
+            {{ ruleCountLabel(automatedJourney().total) }}
+            · {{ automatedJourney().active }} active
+            · {{ automatedJourney().disabled }} disabled
+          </p>
+          <a class="group-card__link" routerLink="/engagement/rules/journey">
+            View global journey
+          </a>
+        </article>
         @for (card of groupCards(); track card.group.id) {
           <article class="group-card">
             <h3 class="group-card__title">{{ card.group.name }}</h3>

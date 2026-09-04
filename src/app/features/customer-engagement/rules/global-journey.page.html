@@ -1,0 +1,169 @@
+<app-page-header
+  title="Customer communication journey"
+  description="See how automated communications across onboarding, adoption and engagement fit together."
+  [breadcrumbs]="breadcrumbs"
+>
+  <ui-button variant="secondary" (click)="backToRules()">Back to Rules</ui-button>
+</app-page-header>
+
+@switch (loadState()) {
+  @case ('loading') {
+    <p class="journey-status" aria-live="polite" aria-busy="true">Loading global journey…</p>
+  }
+  @case ('error') {
+    <ui-error-state
+      title="The global journey could not be loaded"
+      message="Try again. If the problem continues, return to Rules."
+      (retry)="load()"
+    />
+  }
+  @default {
+    <p class="journey-note">
+      This is a planning view. Display order is derived from each rule’s timing. Eligibility and
+      timing on the rule still decide when a communication can send. This list is not an execution
+      sequence.
+    </p>
+
+    <div class="toolbar">
+      <ui-search-field
+        class="toolbar__search"
+        label="Search"
+        placeholder="Search by name, description, or communication"
+        [value]="query()"
+        (valueChange)="query.set($event)"
+      />
+
+      <div class="toolbar__field">
+        <label class="toolbar__label" for="global-group-filter">Group</label>
+        <select
+          id="global-group-filter"
+          class="toolbar__select"
+          [value]="groupFilter()"
+          (change)="onGroupFilterChange($event)"
+        >
+          @for (option of groupFilterOptions(); track option.id) {
+            <option [value]="option.id">{{ option.label }}</option>
+          }
+        </select>
+      </div>
+
+      <div class="toolbar__field">
+        <label class="toolbar__label" for="global-status-filter">Status</label>
+        <select
+          id="global-status-filter"
+          class="toolbar__select"
+          [value]="statusFilter()"
+          (change)="onStatusFilterChange($event)"
+        >
+          @for (option of statusFilterOptions; track option.id) {
+            <option [value]="option.id">{{ option.label }}</option>
+          }
+        </select>
+      </div>
+
+      @if (filtered()) {
+        <ui-button class="toolbar__clear" variant="ghost" (click)="clearFilters()">
+          Clear filters
+        </ui-button>
+      }
+    </div>
+
+    @if (filtered()) {
+      <p class="filter-note" aria-live="polite">
+        Showing {{ view().items.length }} of {{ view().counts.total }} automated communications.
+      </p>
+    }
+
+    @if (view().counts.total === 0) {
+      <ui-empty-state
+        title="No automated communications yet"
+        message="Create rules in Trial & Onboarding, Adoption, or Engagement to see them here."
+      >
+        <ui-button variant="secondary" (click)="backToRules()">Back to Rules</ui-button>
+      </ui-empty-state>
+    } @else if (view().items.length === 0) {
+      <ui-empty-state
+        title="No communications match these filters"
+        message="Try a different group, status, or search term."
+      >
+        <ui-button variant="secondary" (click)="clearFilters()">Clear filters</ui-button>
+      </ui-empty-state>
+    } @else {
+      @for (section of view().sections; track section.id) {
+        <section class="phase" [attr.aria-labelledby]="'phase-' + section.id">
+          <div class="phase__heading">
+            <h2 [id]="'phase-' + section.id">{{ section.title }}</h2>
+            <p>{{ section.lead }}</p>
+          </div>
+
+          <ol class="journey" [attr.aria-label]="section.title">
+            @for (row of section.items; track row.rule.id; let last = $last) {
+              <li
+                class="journey__item"
+                [class.journey__item--last]="last"
+                [class.journey__item--disabled]="row.rule.status === 'disabled'"
+              >
+                <div class="journey__index" aria-hidden="true">{{ row.indexLabel }}</div>
+                <div class="journey__rail" aria-hidden="true">
+                  <span class="journey__dot"></span>
+                  @if (!last) {
+                    <span class="journey__line"></span>
+                  }
+                </div>
+                <article class="journey__card">
+                  <header class="journey__header">
+                    <h3 class="journey__title">
+                      <a
+                        class="journey__name"
+                        [routerLink]="['/engagement/rules', row.rule.id]"
+                        [queryParams]="{ fromJourney: '1' }"
+                      >
+                        {{ row.rule.name }}
+                      </a>
+                    </h3>
+                    <span class="journey__group">{{ row.groupName }}</span>
+                    <ui-status-badge [status]="row.rule.status" />
+                    <app-rule-actions-menu
+                      [rule]="row.rule"
+                      [pending]="pendingRuleId() === row.rule.id"
+                      [showEdit]="true"
+                      (edit)="editRule($event)"
+                      (duplicate)="duplicate($event)"
+                      (toggleStatus)="toggleStatus($event)"
+                      (remove)="deleteRule($event)"
+                    />
+                  </header>
+                  <p class="journey__timing">{{ row.timingLabel }}</p>
+                  @if (!row.deterministic) {
+                    <p class="journey__behaviour">Timing depends on customer behaviour</p>
+                  }
+                  @if (row.eligibility) {
+                    <p class="journey__meta">{{ row.eligibility }}</p>
+                  }
+                  <p class="journey__meta">Send {{ row.templateName }}</p>
+                  <p class="journey__meta">Category: {{ row.categoryLabel }}</p>
+
+                  @if (row.conflictDetail) {
+                    <div class="journey__warning" role="status">
+                      <p class="journey__warning-title">Sequence conflict</p>
+                      <p>{{ row.conflictDetail }}</p>
+                    </div>
+                  }
+                  @if (row.cluster; as cluster) {
+                    <div class="journey__warning" role="status">
+                      <p class="journey__warning-title">Communication cluster</p>
+                      <p>{{ cluster.title }}</p>
+                      <p>{{ cluster.detail }}</p>
+                    </div>
+                  }
+                </article>
+              </li>
+            }
+          </ol>
+        </section>
+      }
+    }
+  }
+}
+
+<ui-confirm-dialog />

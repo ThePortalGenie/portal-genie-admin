@@ -33,7 +33,7 @@ The landing page is organised around **Rule Groups** (journeys). The flat table 
 1. Page header
 2. Overview counts (total / active / disabled for the full loaded set)
 3. Global search (name, description, template — all rules, all groups)
-4. Rule group cards
+4. Rule group cards, with a prominent **All automated communications** card first (not a Rule Group)
 5. All rules: status + category filters and the existing table
 
 ### Rule group cards
@@ -41,6 +41,8 @@ The landing page is organised around **Rule Groups** (journeys). The flat table 
 Each card is a journey, not a category filter. Counts are derived from assigned rules only (total / active / disabled). Do not show emails sent, customers, or open rates.
 
 **View rules** → `/engagement/rules/group/:groupId`
+
+A separate **All automated communications** card sits before the group cards. It is a derived view of Trial & Onboarding, Adoption, and Engagement (Announcements excluded). **View global journey** → `/engagement/rules/journey`. It has no `groupId`.
 
 ### Toolbar (All rules)
 
@@ -121,6 +123,22 @@ Shared error pattern: short message, Retry. Do not dump raw HTTP text.
 ### Search with no matches
 
 Distinct from empty: “No rules match this search.” Clear filters action. Do not use the first-run empty copy.
+
+---
+
+# A3. Global customer communication journey
+
+**Route:** `/engagement/rules/journey`  
+**Title:** Customer communication journey  
+**Description:** See how automated communications across onboarding, adoption and engagement fit together.
+
+Breadcrumb: Customer Engagement / Rules / Global journey
+
+This is a **planning visualisation**, not a fifth Rule Group and not an execution sequence. Order is derived from comparable lifecycle timing. Behavioural rules are shown in a separate section with “Timing depends on customer behaviour”. Sequence conflicts and same-day communication clusters are warnings only.
+
+The Rule Editor journey panel remains group-specific. Edit from this page returns here (`?fromJourney=1`).
+
+Helper copy: display order is derived from timing. Eligibility and timing on each rule still decide when a communication can send.
 
 ---
 

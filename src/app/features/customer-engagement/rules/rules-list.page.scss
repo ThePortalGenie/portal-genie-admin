@@ -156,6 +156,12 @@
   outline-offset: var(--focus-offset);
 }
 
+.group-card--global {
+  grid-column: 1 / -1;
+  border-color: rgb(0 119 190 / 35%);
+  box-shadow: inset 3px 0 0 var(--portal-blue);
+}
+
 .all-rules {
   margin-bottom: var(--space-4);
 }
