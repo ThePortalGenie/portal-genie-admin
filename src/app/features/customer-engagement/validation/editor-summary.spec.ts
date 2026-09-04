@@ -115,11 +115,11 @@ describe('previewRuleDraft', () => {
 
     draft.name = 'Welcome';
     const noCategory = previewRuleDraft(draft, METRIC_CATALOG, TEMPLATE_FIXTURES);
-    expect(noCategory.guidance).toBe('This rule is incomplete. Choose a category.');
+    expect(noCategory.guidance).toBe('This rule is incomplete. Choose a purpose.');
 
     draft.category = 'onboarding';
     const noGroup = previewRuleDraft(draft, METRIC_CATALOG, TEMPLATE_FIXTURES);
-    expect(noGroup.guidance).toBe('This rule is incomplete. Choose a rule group.');
+    expect(noGroup.guidance).toBe('This rule is incomplete. Choose a journey.');
 
     draft.groupId = 'rg_trial_onboarding';
     draft.sequenceOrder = 1;

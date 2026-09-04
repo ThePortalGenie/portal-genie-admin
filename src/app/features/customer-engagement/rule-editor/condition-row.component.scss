@@ -10,9 +10,9 @@
 }
 
 .condition-row__metric {
-  flex: 1 1 14rem;
-  min-width: 12rem;
-  max-width: min(100%, 24rem);
+  flex: 0 1 22rem;
+  width: 22rem;
+  max-width: 100%;
 }
 
 .condition-row__metric .pg-select {
@@ -21,16 +21,27 @@
   white-space: nowrap;
 }
 
-.condition-row__operator,
+.condition-row__operator {
+  flex: 0 1 16rem;
+  width: 16rem;
+  max-width: 100%;
+}
+
 .condition-row__rest,
-.condition-row__value,
+.condition-row__value {
+  flex: 0 1 18rem;
+  width: 18rem;
+  max-width: 100%;
+}
+
 .condition-row__direction {
-  flex: 1 1 10rem;
-  min-width: 9rem;
+  flex: 0 1 14rem;
+  width: 14rem;
+  max-width: 100%;
 }
 
 .condition-row__numeric {
-  flex: 0 1 auto;
+  flex: 0 0 auto;
 }
 
 .pg-control--numeric {
@@ -64,7 +75,6 @@
 .condition-row__remove {
   display: flex;
   align-items: flex-end;
-  margin-left: auto;
 }
 
 .remove {
@@ -84,13 +94,17 @@
 }
 
 @media (max-width: 39.99rem) {
-  .condition-row__metric {
-    flex-basis: 100%;
+  .condition-row__metric,
+  .condition-row__operator,
+  .condition-row__rest,
+  .condition-row__value,
+  .condition-row__direction {
+    flex: 1 1 100%;
+    width: 100%;
     max-width: none;
   }
 
   .condition-row__remove {
-    margin-left: 0;
     width: 100%;
     justify-content: flex-start;
   }

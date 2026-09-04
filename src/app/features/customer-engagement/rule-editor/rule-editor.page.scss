@@ -15,39 +15,45 @@
 }
 
 .editor-section h2 {
-  margin-bottom: var(--space-2);
+  margin-bottom: var(--space-3);
 }
 
 .section-lead {
-  margin-bottom: var(--space-4);
+  margin-bottom: var(--space-3);
   color: var(--color-text-muted);
 }
 
-.details-name {
-  margin-bottom: var(--space-4);
+.details-name,
+.details-description {
+  max-width: 36rem;
+  margin-bottom: var(--space-3);
 }
 
 .details-name .pg-control {
-  max-width: 40rem;
   font-size: 1rem;
   font-weight: var(--font-weight-medium);
 }
 
 .details-secondary {
-  display: grid;
-  grid-template-columns: minmax(0, 16rem) auto;
+  display: flex;
+  flex-wrap: wrap;
+  align-items: flex-start;
   gap: var(--space-4);
-  align-items: start;
-  margin-bottom: var(--space-4);
+  margin-bottom: var(--space-3);
+}
+
+.details-secondary > .pg-field:first-child {
+  width: 16rem;
+  max-width: 100%;
 }
 
 .details-group {
-  max-width: 16rem;
-  margin-bottom: var(--space-4);
+  max-width: 18rem;
+  margin-bottom: var(--space-3);
 }
 
 .details-description {
-  max-width: 40rem;
+  margin-bottom: 0;
 }
 
 .details-description .pg-textarea {
@@ -58,6 +64,7 @@
   position: sticky;
   bottom: 0;
   z-index: 2;
+  max-width: 36rem;
   display: flex;
   flex-direction: column;
   gap: var(--space-3);
@@ -66,14 +73,14 @@
   border-top: 1px solid var(--color-border);
 }
 
-  .editor-footer__actions {
-    display: flex;
-    justify-content: space-between;
-    gap: var(--space-2);
-  }
+.editor-footer__actions {
+  display: flex;
+  justify-content: space-between;
+  gap: var(--space-2);
+}
 
 .send-once {
-  margin: 0 0 var(--space-4);
+  margin: 0 0 var(--space-3);
   font-weight: var(--font-weight-medium);
   color: var(--portal-navy);
 }
@@ -81,7 +88,7 @@
 .send-fields {
   display: grid;
   grid-template-columns: minmax(10rem, 14rem) minmax(12rem, 20rem);
-  gap: var(--space-4);
+  gap: var(--space-3) var(--space-4);
   align-items: start;
 }
 
@@ -103,12 +110,12 @@
 }
 
 .editor-send {
-  max-width: 40rem;
+  max-width: 36rem;
 }
 
 @container editor (min-width: 70rem) {
   .editor-layout {
-    grid-template-columns: minmax(0, 1fr) minmax(18rem, 22rem);
+    grid-template-columns: minmax(0, 1fr) minmax(20rem, 22rem);
     grid-template-areas:
       'details journey'
       'when journey'
@@ -164,11 +171,13 @@
 }
 
 @media (max-width: 39.99rem) {
-  .details-secondary {
-    grid-template-columns: 1fr;
-  }
-
-  .details-group {
+  .details-secondary > .pg-field:first-child,
+  .details-name,
+  .details-group,
+  .details-description,
+  .editor-send,
+  .editor-footer {
+    width: 100%;
     max-width: none;
   }
 

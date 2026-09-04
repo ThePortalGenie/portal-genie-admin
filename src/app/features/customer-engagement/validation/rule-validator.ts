@@ -37,11 +37,11 @@ export function validateRuleDraft(
   }
 
   if (!draft.category) {
-    errors.push(issue('rule.category.required', 'Choose a category', 'category'));
+    errors.push(issue('rule.category.required', 'Choose a purpose', 'category'));
   }
 
   if (!draft.groupId) {
-    errors.push(issue('rule.group.required', 'Choose a rule group', 'groupId'));
+    errors.push(issue('rule.group.required', 'Choose a journey', 'groupId'));
   }
 
   if (draft.sequenceOrder === null || draft.sequenceOrder === undefined) {

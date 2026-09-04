@@ -71,10 +71,10 @@ function incompleteGuidance(
     return 'This rule is incomplete. Give the rule a name.';
   }
   if (!draft.category) {
-    return 'This rule is incomplete. Choose a category.';
+    return 'This rule is incomplete. Choose a purpose.';
   }
   if (!draft.groupId) {
-    return 'This rule is incomplete. Choose a rule group.';
+    return 'This rule is incomplete. Choose a journey.';
   }
   if (!hasCondition && (isAnnouncementGroup(draft.groupId) || !hasLifecycleTiming(draft.timing))) {
     return 'This rule is incomplete. Add a customer condition.';

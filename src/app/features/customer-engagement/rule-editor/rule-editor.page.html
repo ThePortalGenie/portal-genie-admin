@@ -56,7 +56,7 @@
         <div class="details-secondary">
           <div class="pg-field">
             <label class="pg-label" for="rule-category">
-              Category <span class="pg-required" aria-hidden="true">*</span>
+              Purpose <span class="pg-required" aria-hidden="true">*</span>
             </label>
             <select
               class="pg-select"
@@ -65,7 +65,7 @@
               [class.pg-control--error]="!!fieldError('category')"
               [attr.aria-invalid]="!!fieldError('category')"
             >
-              <option value="">Choose a category</option>
+              <option value="">Choose a purpose</option>
               @for (option of categoryOptions; track option.id) {
                 <option [value]="option.id">{{ option.label }}</option>
               }
@@ -73,7 +73,7 @@
             @if (fieldError('category'); as issue) {
               <ui-validation-message [message]="issue.message" />
             }
-            <p class="pg-hint">Describes the purpose of this rule.</p>
+            <p class="pg-hint">What type of communication is this?</p>
           </div>
 
           <div class="pg-field">
@@ -91,7 +91,7 @@
 
         <div class="pg-field details-group">
           <label class="pg-label" for="rule-group">
-            Rule group <span class="pg-required" aria-hidden="true">*</span>
+            Journey <span class="pg-required" aria-hidden="true">*</span>
           </label>
           <select
             class="pg-select"
@@ -101,7 +101,7 @@
             [attr.aria-invalid]="!!fieldError('groupId')"
             (change)="onGroupChange()"
           >
-            <option value="">Choose a rule group</option>
+            <option value="">Choose a journey</option>
             @for (group of groups(); track group.id) {
               <option [value]="group.id">{{ group.name }}</option>
             }
@@ -113,7 +113,7 @@
             {{
               isAnnouncement()
                 ? 'Groups this with other one-off announcements.'
-                : 'Organises related rules into a customer journey.'
+                : 'Which customer journey should this rule appear in?'
             }}
           </p>
         </div>

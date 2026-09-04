@@ -190,8 +190,8 @@ The summary is not a recipient preview. It is a sentence restating the current d
 | --- | --- | --- |
 | Name | Yes | Text |
 | Description | No | Textarea, 2–3 rows |
-| Category | Yes | Select: **rule** categories (Onboarding, Adoption, Engagement, Conversion, Announcement, Other). Not template categories. Not rule groups. Help: “Describes the purpose of this rule.” No “None”. |
-| Rule group | Yes | Select: Trial & Onboarding, Adoption, Engagement, Announcements. Help: “Organises related rules into a customer journey.” Preselected when Create is launched from a group page. |
+| Purpose (`category`) | Yes | Select: **rule** categories (Onboarding, Adoption, Engagement, Conversion, Announcement, Other). Not template categories. Not journeys. Label in the editor: **Purpose**. Help: “What type of communication is this?” No “None”. Stored as `Rule.category`. |
+| Journey (`groupId`) | Yes | Select: Trial & Onboarding, Adoption, Engagement, Announcements. Label in the editor: **Journey**. Help: “Which customer journey should this rule appear in?” Preselected when Create is launched from a group page. Stored as `Rule.groupId`. Distinct from Purpose. |
 | Journey sequence | Yes (derived), hidden for Announcements | Right-hand (or below details) visual sequence for automated groups. Drag or Move up / Move down the current rule. `sequenceOrder` is calculated from that position. Display order only; does not control send order. Announcements do not show this panel. |
 | Status | Yes | Segmented control or select: Disabled / Active |
 
@@ -300,7 +300,7 @@ Show:
 | No template | Error | Select a communication template |
 | Timing days missing or invalid | Error | Enter a valid number of days (0 or more) |
 | Timing date metric missing | Error | Choose a date |
-| Missing rule category | Error | Choose a category |
+| Missing purpose (`category`) | Error | Choose a purpose |
 | Days > 365 | Warning | This is more than a year — check this is intentional. Does **not** block save. There is no maximum. |
 | Unusual template vs conditions | Warning | Optional; skip in v1 rather than guess |
 
