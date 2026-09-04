@@ -42,5 +42,16 @@ describe('draftFromRule', () => {
     expect(draft.groupId).toBe('rg_trial_onboarding');
     expect(draft.sequenceOrder).toBe(3);
     expect(draft.category).toBe('conversion');
+    expect(draft.timing.mode).toBe('days_before_date');
+  });
+
+  it('preserves scheduled_once when editing an announcement', () => {
+    const source = RULE_FIXTURES.find((rule) => rule.id === 'rule_feature');
+    expect(source).toBeDefined();
+    const draft = draftFromRule(source!);
+    expect(draft.timing).toEqual({
+      mode: 'scheduled_once',
+      scheduledAt: '2026-09-15T09:00:00+02:00',
+    });
   });
 });

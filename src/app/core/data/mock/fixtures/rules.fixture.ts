@@ -24,6 +24,10 @@ function timingOnMatch(): RuleTiming {
   return { mode: 'on_match' };
 }
 
+function timingScheduledOnce(scheduledAt: string): RuleTiming {
+  return { mode: 'scheduled_once', scheduledAt };
+}
+
 function timingAfter(days: number, anchor: string): RuleTiming {
   return { mode: 'days_after_date', delayDays: days, anchorMetricKey: anchor };
 }
@@ -278,7 +282,7 @@ export const RULE_FIXTURES: Rule[] = [
     status: 'disabled',
     rootGroup: group('g_feature', [condition('c_feature_status', 'accountStatus', 'is', 'active')]),
     templateId: 'feature-announcement',
-    timing: timingOnMatch(),
+    timing: timingScheduledOnce('2026-09-15T09:00:00+02:00'),
     createdAt: '2026-08-01T09:00:00.000Z',
     updatedAt: '2026-09-04T12:00:00.000Z',
   },
@@ -294,7 +298,7 @@ export const RULE_FIXTURES: Rule[] = [
       condition('c_product_update_status', 'accountStatus', 'is', 'active'),
     ]),
     templateId: 'product-update',
-    timing: timingOnMatch(),
+    timing: timingScheduledOnce('2026-08-01T09:00:00+02:00'),
     createdAt: '2026-09-04T12:00:00.000Z',
     updatedAt: '2026-09-04T12:00:00.000Z',
   },

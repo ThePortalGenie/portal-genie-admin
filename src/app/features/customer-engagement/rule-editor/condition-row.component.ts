@@ -34,6 +34,7 @@ export class ConditionRow {
   readonly metrics = input.required<readonly CustomerMetric[]>();
   readonly issues = input<readonly ValidationIssue[]>([]);
   readonly showErrors = input(false);
+  readonly audienceOnly = input(false);
   readonly remove = output<void>();
 
   protected readonly operatorLabels = EDITOR_OPERATOR_LABELS;
@@ -45,7 +46,7 @@ export class ConditionRow {
   }
 
   protected isLifecycle(): boolean {
-    return isLifecycleTimingMetric(this.selectedMetric());
+    return !this.audienceOnly() && isLifecycleTimingMetric(this.selectedMetric());
   }
 
   protected lifecycleDirections(): TimingDirection[] {
@@ -101,9 +102,9 @@ export class ConditionRow {
     );
     this.group().patchValue({
       ...next,
-      offsetDays: isLifecycleTimingMetric(metric) ? 0 : null,
-      timingDirection: isLifecycleTimingMetric(metric)
-        ? defaultLifecycleDirection(metric)
+      offsetDays: this.isLifecycle() ? 0 : null,
+      timingDirection: this.isLifecycle()
+        ? defaultLifecycleDirection(metric!)
         : '',
     });
   }

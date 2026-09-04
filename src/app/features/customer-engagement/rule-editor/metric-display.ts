@@ -9,6 +9,7 @@ const METRIC_EDITOR_LABELS: Record<string, string> = {
   daysUntilTrialExpiry: 'Days until trial expiry',
   accountStatus: 'Account status',
   logoUploaded: 'Company logo',
+  accountingSoftwareConnected: 'Accounting software',
   lastPortalSignInAt: 'Portal sign-in',
   daysSinceLastPortalSignIn: 'Days since last portal sign-in',
   portalSignInCount: 'Portal sign-in count',
@@ -16,12 +17,15 @@ const METRIC_EDITOR_LABELS: Record<string, string> = {
   hasCreatedFolder: 'Folder',
   documentCount: 'Document count',
   hasUploadedDocument: 'Document',
+  hasCreatedScheduledEmailTemplate: 'Scheduled email template',
 };
 
 const BOOLEAN_VALUE_LABELS: Record<string, { yes: string; no: string }> = {
   logoUploaded: { yes: 'has been uploaded', no: 'has not been uploaded' },
+  accountingSoftwareConnected: { yes: 'is connected', no: 'is not connected' },
   hasCreatedFolder: { yes: 'has been created', no: 'has not been created' },
   hasUploadedDocument: { yes: 'has been uploaded', no: 'has not been uploaded' },
+  hasCreatedScheduledEmailTemplate: { yes: 'has been created', no: 'has not been created' },
 };
 
 export const EDITOR_OPERATOR_LABELS: Record<MetricOperator, string> = {

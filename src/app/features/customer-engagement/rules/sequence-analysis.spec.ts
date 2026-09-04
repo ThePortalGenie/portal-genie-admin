@@ -62,8 +62,11 @@ describe('normaliseLifecycleTiming', () => {
     });
   });
 
-  it('does not normalise behavioural or incomplete timing', () => {
+  it('does not normalise behavioural, scheduled, or incomplete timing', () => {
     expect(normaliseLifecycleTiming(onMatch())).toBeNull();
+    expect(
+      normaliseLifecycleTiming({ mode: 'scheduled_once', scheduledAt: '2026-09-15T09:00:00+02:00' }),
+    ).toBeNull();
     expect(normaliseLifecycleTiming({ mode: 'days_after_date', delayDays: 5 })).toBeNull();
   });
 });

@@ -24,6 +24,8 @@ const EXPECTED_SELECTOR_LABELS: Record<string, string> = {
   daysUntilTrialExpiry: 'Days until trial expiry',
   accountStatus: 'Account status',
   logoUploaded: 'Company logo (whether a logo has been uploaded)',
+  accountingSoftwareConnected:
+    'Accounting software (whether accounting software is connected)',
   lastPortalSignInAt: 'Portal sign-in (whether the customer has ever signed in)',
   daysSinceLastPortalSignIn: 'Days since last portal sign-in',
   portalSignInCount: 'Portal sign-in count',
@@ -31,6 +33,8 @@ const EXPECTED_SELECTOR_LABELS: Record<string, string> = {
   hasCreatedFolder: 'Folder (whether at least one folder has been created)',
   documentCount: 'Document count',
   hasUploadedDocument: 'Document (whether at least one document has been uploaded)',
+  hasCreatedScheduledEmailTemplate:
+    'Scheduled email template (whether a scheduled email template has been created)',
 };
 
 describe('metric display labels', () => {
@@ -43,6 +47,10 @@ describe('metric display labels', () => {
     expect(metricEditorLabel(metric('trialExpiresAt'))).toBe('Trial expiry');
     expect(metricEditorLabel(metric('daysSinceLastPortalSignIn'))).toBe(
       'Days since last portal sign-in',
+    );
+    expect(metricEditorLabel(metric('accountingSoftwareConnected'))).toBe('Accounting software');
+    expect(metricEditorLabel(metric('hasCreatedScheduledEmailTemplate'))).toBe(
+      'Scheduled email template',
     );
   });
 
@@ -59,6 +67,9 @@ describe('metric display labels', () => {
     expect(metricSelectorLabel(metric('logoUploaded'))).toBe(
       'Company logo (whether a logo has been uploaded)',
     );
+    expect(metricSelectorLabel(metric('accountingSoftwareConnected'))).toBe(
+      'Accounting software (whether accounting software is connected)',
+    );
     expect(metricSelectorLabel(metric('lastPortalSignInAt'))).toBe(
       'Portal sign-in (whether the customer has ever signed in)',
     );
@@ -67,6 +78,9 @@ describe('metric display labels', () => {
     );
     expect(metricSelectorLabel(metric('hasUploadedDocument'))).toBe(
       'Document (whether at least one document has been uploaded)',
+    );
+    expect(metricSelectorLabel(metric('hasCreatedScheduledEmailTemplate'))).toBe(
+      'Scheduled email template (whether a scheduled email template has been created)',
     );
   });
 
@@ -90,6 +104,14 @@ describe('metric display labels', () => {
       no: 'has not been uploaded',
     });
     expect(booleanValueLabels('hasCreatedFolder')).toEqual({
+      yes: 'has been created',
+      no: 'has not been created',
+    });
+    expect(booleanValueLabels('accountingSoftwareConnected')).toEqual({
+      yes: 'is connected',
+      no: 'is not connected',
+    });
+    expect(booleanValueLabels('hasCreatedScheduledEmailTemplate')).toEqual({
       yes: 'has been created',
       no: 'has not been created',
     });

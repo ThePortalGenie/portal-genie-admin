@@ -121,6 +121,43 @@
   color: var(--color-text-muted);
 }
 
+.announcement-bucket + .announcement-bucket {
+  margin-top: var(--space-8);
+}
+
+.bucket-heading {
+  margin: 0 0 var(--space-3);
+  font-size: var(--font-size-h2);
+}
+
+.bucket-note {
+  max-width: 42rem;
+  margin: 0 0 var(--space-3);
+  color: var(--color-text-muted);
+}
+
+.announcements {
+  margin: 0;
+  padding: 0;
+  list-style: none;
+}
+
+.announcement + .announcement {
+  margin-top: var(--space-4);
+}
+
+.announcement .journey__card {
+  margin-bottom: 0;
+}
+
+.announcement__when {
+  margin: 0 0 var(--space-1);
+  font-size: var(--font-size-caption);
+  font-weight: var(--font-weight-semibold);
+  letter-spacing: 0.04em;
+  color: var(--portal-steel);
+}
+
 @media (max-width: 39.99rem) {
   .journey__item {
     grid-template-columns: 1.5rem 0.85rem minmax(0, 1fr);

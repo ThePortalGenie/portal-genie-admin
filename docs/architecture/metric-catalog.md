@@ -82,6 +82,14 @@ Notes:
 | --- | --- | --- | --- | --- | --- |
 | `logoUploaded` | Logo uploaded | `boolean` | `is_true`, `is_false` | No | No |
 
+### Integrations
+
+| Key | Display name | Type | Operators | Value required | Timing anchor |
+| --- | --- | --- | --- | --- | --- |
+| `accountingSoftwareConnected` | Accounting software | `boolean` | `is_true`, `is_false` | No | No |
+
+Frontend contract only: whether accounting software is connected. Do not query an integration from this app.
+
 ### Activity
 
 | Key | Display name | Type | Operators | Value required | Timing anchor |
@@ -102,6 +110,14 @@ Inactivity: prefer `daysSinceLastPortalSignIn` `gte` X. Never signed in: `lastPo
 | `hasUploadedDocument` | Has uploaded a document | `boolean` | `is_true`, `is_false` | No | No |
 
 `hasCreatedFolder` is equivalent to `folderCount` `gt` 0. Both exist because administrators think in yes/no for adoption and in counts for milestones. Validation may **warn** if both are used in the same AND group in a redundant way; it should **error** if they contradict (has created folder = yes AND folder count = 0).
+
+### Communications
+
+| Key | Display name | Type | Operators | Value required | Timing anchor |
+| --- | --- | --- | --- | --- | --- |
+| `hasCreatedScheduledEmailTemplate` | Scheduled email template | `boolean` | `is_true`, `is_false` | No | No |
+
+Frontend contract only: whether a scheduled email template has been created. Do not inspect or send email from this app.
 
 ---
 

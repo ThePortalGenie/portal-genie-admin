@@ -129,6 +129,11 @@ function persistTiming(timing: RuleTiming): RuleTiming {
   if (timing.mode === 'on_match') {
     return { mode: 'on_match' };
   }
+  if (timing.mode === 'scheduled_once') {
+    return timing.scheduledAt
+      ? { mode: 'scheduled_once', scheduledAt: timing.scheduledAt }
+      : { mode: 'scheduled_once' };
+  }
   return {
     mode: timing.mode,
     delayDays: timing.delayDays ?? 0,

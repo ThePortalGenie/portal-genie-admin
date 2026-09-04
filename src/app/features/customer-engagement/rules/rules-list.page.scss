@@ -92,10 +92,6 @@
   margin-bottom: var(--space-4);
 }
 
-.section-heading h2 {
-  margin: 0;
-}
-
 .section-heading__lead {
   margin: var(--space-1) 0 0;
   max-width: 42rem;
@@ -106,6 +102,14 @@
   margin-bottom: var(--space-10);
 }
 
+.groups .section-heading {
+  margin-bottom: var(--space-5);
+}
+
+.groups .section-heading__lead {
+  max-width: 36rem;
+}
+
 .group-grid {
   display: grid;
   grid-template-columns: repeat(auto-fit, minmax(min(100%, 18rem), 1fr));
@@ -113,8 +117,9 @@
 }
 
 .group-card {
-  display: flex;
-  flex-direction: column;
+  display: grid;
+  grid-template-rows: auto auto minmax(0, 1fr) auto auto auto;
+  row-gap: var(--space-2);
   min-width: 0;
   height: 100%;
   padding: var(--space-5);
@@ -125,57 +130,47 @@
 }
 
 .group-card__kicker {
-  margin: 0 0 var(--space-2);
+  margin: 0;
+  min-height: calc(var(--font-size-caption) * var(--line-height-tight));
   font-size: var(--font-size-caption);
   font-weight: var(--font-weight-medium);
+  line-height: var(--line-height-tight);
   color: var(--portal-blue);
 }
 
 .group-card__title {
-  margin: 0 0 var(--space-2);
+  margin: 0;
+  min-height: calc(2 * var(--font-size-h2) * var(--line-height-tight));
   font-size: var(--font-size-h2);
+  line-height: var(--line-height-tight);
 }
 
-.group-card__description {
+.group-card__description,
+.group-card__span,
+.group-card__counts {
   margin: 0;
   color: var(--color-text-muted);
 }
 
-.group-card__meta {
-  margin-top: auto;
-  padding-top: var(--space-4);
-}
-
-.group-card__span,
-.group-card__counts {
-  margin: 0 0 var(--space-2);
-  min-height: 1.25rem;
-  color: var(--color-text-muted);
-}
-
 .group-card__span {
+  min-height: calc(2 * var(--font-size-body) * var(--line-height-body));
+  padding-top: var(--space-2);
   font-weight: var(--font-weight-medium);
   color: var(--portal-steel);
 }
 
 .group-card__counts {
-  margin-bottom: 0;
+  min-height: calc(var(--font-size-body) * var(--line-height-body));
 }
 
 .group-card__link {
-  padding-top: var(--space-3);
+  padding-top: var(--space-1);
   font-weight: var(--font-weight-medium);
-  color: var(--portal-blue);
   text-decoration: none;
 }
 
 .group-card__link:hover {
   text-decoration: underline;
-}
-
-.group-card__link:focus-visible {
-  outline: var(--focus-ring);
-  outline-offset: var(--focus-offset);
 }
 
 .group-card--global {

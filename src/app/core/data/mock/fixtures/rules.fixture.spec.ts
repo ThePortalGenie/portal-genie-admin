@@ -135,11 +135,17 @@ describe('rule fixtures', () => {
     expect(ruleById('rule_document').timing.delayDays).toBe(5);
   });
 
-  it('keeps announcement rules disabled by default', () => {
+  it('keeps announcement rules as one-off scheduled communications', () => {
     expect(ruleById('rule_feature').status).toBe('disabled');
     expect(ruleById('rule_product_update').status).toBe('disabled');
-    expect(ruleById('rule_feature').timing.mode).toBe('on_match');
-    expect(ruleById('rule_product_update').timing.mode).toBe('on_match');
+    expect(ruleById('rule_feature').timing).toEqual({
+      mode: 'scheduled_once',
+      scheduledAt: '2026-09-15T09:00:00+02:00',
+    });
+    expect(ruleById('rule_product_update').timing).toEqual({
+      mode: 'scheduled_once',
+      scheduledAt: '2026-08-01T09:00:00+02:00',
+    });
   });
 
   it('places Trial & Onboarding rules in display sequence', () => {

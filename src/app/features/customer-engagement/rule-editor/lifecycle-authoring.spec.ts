@@ -254,4 +254,49 @@ describe('lifecycle authoring', () => {
     expect(rows).toHaveLength(1);
     expect(rows[0].metricKey).toBe('');
   });
+
+  it('does not turn announcement audience dates into lifecycle timing', () => {
+    const { children, timing } = draftPartsFromEditorRows(
+      [
+        row({
+          metricKey: 'accountStatus',
+          operator: 'is',
+          value: 'active',
+        }),
+        row({
+          metricKey: 'registeredAt',
+          operator: 'is_empty',
+        }),
+      ],
+      METRIC_CATALOG,
+      { extractLifecycleTiming: false },
+    );
+
+    expect(timing).toEqual({ mode: 'on_match' });
+    expect(children.map((child) => child.metricKey)).toEqual(['accountStatus', 'registeredAt']);
+  });
+
+  it('does not rehydrate scheduled_once as a lifecycle row', () => {
+    const rows = editorRowsFromDraft(
+      {
+        name: 'New Feature Available',
+        description: '',
+        category: 'announcement',
+        groupId: 'rg_announcements',
+        sequenceOrder: 1,
+        status: 'disabled',
+        rootGroup: {
+          id: 'g',
+          combinator: 'and',
+          children: [{ id: 'c', metricKey: 'accountStatus', operator: 'is', value: 'active' }],
+        },
+        templateId: 'feature-announcement',
+        timing: { mode: 'scheduled_once', scheduledAt: '2026-09-15T09:00:00+02:00' },
+      },
+      METRIC_CATALOG,
+    );
+
+    expect(rows).toHaveLength(1);
+    expect(rows[0].metricKey).toBe('accountStatus');
+  });
 });

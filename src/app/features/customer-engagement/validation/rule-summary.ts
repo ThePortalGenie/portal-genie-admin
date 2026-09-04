@@ -7,6 +7,7 @@ import {
   RuleConditionGroup,
   RuleTiming,
 } from '../models/rule.model';
+import { formatScheduledLong } from '../rules/announcement-schedule';
 
 const TIMING_ANCHOR_LABELS: Record<string, string> = {
   registeredAt: 'registration',
@@ -24,9 +25,43 @@ export function summariseRule(rule: Rule, metrics: readonly CustomerMetric[]): s
   return [timingText, conditionText].filter((part) => part.length > 0).join(' · ');
 }
 
+export function summariseAnnouncementAudience(
+  rule: Rule,
+  metrics: readonly CustomerMetric[],
+): string {
+  const metricByKey = new Map(metrics.map((metric) => [metric.key, metric]));
+  const parts = rule.rootGroup.children
+    .map((child) => {
+      if (isRuleConditionGroup(child)) {
+        return '';
+      }
+      return summariseAnnouncementCondition(child, metricByKey.get(child.metricKey));
+    })
+    .filter((part) => part.length > 0);
+  return parts.join(' · ');
+}
+
+function summariseAnnouncementCondition(
+  condition: RuleCondition,
+  metric: CustomerMetric | undefined,
+): string {
+  if (condition.metricKey === 'accountStatus' && condition.operator === 'is') {
+    const label =
+      metric?.enumValues?.find((item) => item.value === condition.value)?.label ??
+      String(condition.value ?? '');
+    return label ? `${label} customers` : summariseCondition(condition, metric);
+  }
+  return summariseCondition(condition, metric);
+}
+
 export function summariseTimingPhrase(timing: RuleTiming): string {
   if (timing.mode === 'on_match') {
     return 'When the conditions become true';
+  }
+  if (timing.mode === 'scheduled_once') {
+    return timing.scheduledAt
+      ? `Send once on ${formatScheduledLong(timing.scheduledAt)}`
+      : 'Choose a send date and time';
   }
   return summariseTiming(timing) || 'Timing not set yet';
 }
@@ -107,6 +142,10 @@ function inactivityThresholdDays(rule: Rule): number | null {
 export function summariseTiming(timing: RuleTiming): string {
   if (timing.mode === 'on_match') {
     return '';
+  }
+
+  if (timing.mode === 'scheduled_once') {
+    return timing.scheduledAt ? `Send once ${formatScheduledLong(timing.scheduledAt)}` : '';
   }
 
   const days = timing.delayDays ?? 0;
@@ -211,10 +250,14 @@ function summariseBoolean(
   switch (metricKey) {
     case 'logoUploaded':
       return isYes ? 'Logo uploaded' : 'Logo not uploaded';
+    case 'accountingSoftwareConnected':
+      return isYes ? 'Accounting software connected' : 'Accounting software not connected';
     case 'hasCreatedFolder':
       return isYes ? 'Has created a folder' : 'No folder created';
     case 'hasUploadedDocument':
       return isYes ? 'Has uploaded a document' : 'No documents uploaded';
+    case 'hasCreatedScheduledEmailTemplate':
+      return isYes ? 'Scheduled email template created' : 'No scheduled email template created';
     default:
       return isYes ? displayName : `${displayName}: no`;
   }

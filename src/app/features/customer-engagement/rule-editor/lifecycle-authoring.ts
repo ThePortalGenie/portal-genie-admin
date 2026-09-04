@@ -102,10 +102,14 @@ export function editorRowsFromDraft(
 export function draftPartsFromEditorRows(
   rows: readonly EditorConditionRow[],
   metrics: readonly CustomerMetric[],
+  options: { extractLifecycleTiming?: boolean } = {},
 ): { children: ConditionDraft[]; timing: RuleTiming } {
-  const lifecycle = rows.filter((row) => isLifecycleTimingKey(row.metricKey, metrics));
+  const extractLifecycleTiming = options.extractLifecycleTiming !== false;
+  const lifecycle = extractLifecycleTiming
+    ? rows.filter((row) => isLifecycleTimingKey(row.metricKey, metrics))
+    : [];
   const children = rows
-    .filter((row) => !isLifecycleTimingKey(row.metricKey, metrics))
+    .filter((row) => !extractLifecycleTiming || !isLifecycleTimingKey(row.metricKey, metrics))
     .map((row) => ({
       id: row.id,
       metricKey: row.metricKey,
@@ -158,6 +162,7 @@ export function issuesForEditorRow(
   editorIndex: number,
   metrics: readonly CustomerMetric[],
   issues: readonly ValidationIssue[],
+  options: { treatLifecycleRows?: boolean } = {},
 ): ValidationIssue[] {
   const row = rows[editorIndex];
   if (!row) {
@@ -165,9 +170,10 @@ export function issuesForEditorRow(
   }
 
   const extras = issues.filter((issue) => issue.path === `editor.rows.${editorIndex}.metricKey`);
-  if (isLifecycleTimingKey(row.metricKey, metrics)) {
+  const treatLifecycle = options.treatLifecycleRows !== false;
+  if (treatLifecycle && isLifecycleTimingKey(row.metricKey, metrics)) {
     const remapped = issues
-      .filter((issue) => issue.path.startsWith('timing.'))
+      .filter((issue) => isJourneyTimingIssue(issue.path))
       .map((issue) => ({
         ...issue,
         path: rewriteTimingPath(issue.path, editorIndex),
@@ -175,7 +181,7 @@ export function issuesForEditorRow(
     return [...extras, ...remapped];
   }
 
-  const eligibilityIndex = eligibilityIndexForRow(rows, metrics, editorIndex);
+  const eligibilityIndex = eligibilityIndexForRow(rows, metrics, editorIndex, treatLifecycle);
   if (eligibilityIndex === null) {
     return extras;
   }
@@ -198,7 +204,11 @@ export function editorRowFromCondition(condition: ConditionDraft): EditorConditi
 }
 
 function lifecycleRowFromTiming(draft: RuleDraft): EditorConditionRow | null {
-  if (draft.timing.mode === 'on_match' || !draft.timing.anchorMetricKey) {
+  if (
+    draft.timing.mode === 'on_match' ||
+    draft.timing.mode === 'scheduled_once' ||
+    !draft.timing.anchorMetricKey
+  ) {
     return null;
   }
   return {
@@ -215,17 +225,26 @@ function eligibilityIndexForRow(
   rows: readonly EditorConditionRow[],
   metrics: readonly CustomerMetric[],
   editorIndex: number,
+  treatLifecycle: boolean,
 ): number | null {
-  if (isLifecycleTimingKey(rows[editorIndex]?.metricKey ?? '', metrics)) {
+  if (treatLifecycle && isLifecycleTimingKey(rows[editorIndex]?.metricKey ?? '', metrics)) {
     return null;
   }
   let index = 0;
   for (let i = 0; i < editorIndex; i += 1) {
-    if (!isLifecycleTimingKey(rows[i].metricKey, metrics)) {
+    if (!treatLifecycle || !isLifecycleTimingKey(rows[i].metricKey, metrics)) {
       index += 1;
     }
   }
   return index;
+}
+
+function isJourneyTimingIssue(path: string): boolean {
+  return (
+    path.startsWith('timing.') &&
+    !path.startsWith('timing.scheduled') &&
+    path !== 'timing.scheduledAt'
+  );
 }
 
 function rewriteTimingPath(path: string, editorIndex: number): string {

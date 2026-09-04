@@ -17,7 +17,7 @@ import { RuleService } from '../../../core/data/rule.service';
 import { TemplateService } from '../../../core/data/template.service';
 import { CustomerMetric } from '../../../core/domain/metric.types';
 import { RULE_CATEGORY_LABELS } from '../../../core/domain/rule-category';
-import { RuleGroup } from '../../../core/domain/rule-group';
+import { isAnnouncementGroup, RuleGroup } from '../../../core/domain/rule-group';
 import { CommunicationTemplate } from '../../../core/domain/template.types';
 import { PageHeader } from '../../../layout/page-header/page-header.component';
 import { BreadcrumbItem } from '../../../shared/ui/breadcrumb/breadcrumb.model';
@@ -28,10 +28,17 @@ import { ErrorState } from '../../../shared/ui/error-state/error-state.component
 import { SearchField } from '../../../shared/ui/search-field/search-field.component';
 import { StatusBadge } from '../../../shared/ui/status-badge/status-badge.component';
 import { Rule } from '../models/rule.model';
-import { summariseJourneyItem } from '../validation/rule-summary';
+import { summariseAnnouncementAudience, summariseJourneyItem } from '../validation/rule-summary';
 import { filterRules, RULE_FILTER_ALL } from './rule-list.filters';
 import { RuleActionsMenu } from './rule-actions-menu.component';
 import { rulesForGroup } from './rule-group.helpers';
+import {
+  AnnouncementBucket,
+  AnnouncementListItem,
+  pastAnnouncements,
+  upcomingAnnouncements,
+} from './announcement-list';
+import { formatScheduledCompact } from './announcement-schedule';
 
 type LoadState = 'loading' | 'loaded' | 'error' | 'not-found';
 
@@ -42,6 +49,14 @@ type JourneyRow = {
   eligibility: string;
   templateName: string;
   categoryLabel: string;
+};
+
+type AnnouncementRow = {
+  rule: Rule;
+  whenLabel: string;
+  audience: string;
+  templateName: string;
+  bucket: AnnouncementBucket;
 };
 
 @Component({
@@ -97,6 +112,8 @@ export class RuleGroupPage {
     return names;
   });
 
+  protected readonly isAnnouncement = computed(() => isAnnouncementGroup(this.groupId()));
+
   protected readonly groupRules = computed(() => rulesForGroup(this.rules(), this.groupId()));
 
   protected readonly visibleRules = computed(() => {
@@ -129,6 +146,14 @@ export class RuleGroupPage {
       };
     });
   });
+
+  protected readonly upcomingAnnouncementRows = computed((): AnnouncementRow[] =>
+    this.toAnnouncementRows(upcomingAnnouncements(this.visibleRules())),
+  );
+
+  protected readonly pastAnnouncementRows = computed((): AnnouncementRow[] =>
+    this.toAnnouncementRows(pastAnnouncements(this.visibleRules())),
+  );
 
   constructor() {
     effect(() => {
@@ -222,6 +247,18 @@ export class RuleGroupPage {
       return;
     }
     this.runMutation(rule.id, this.ruleService.delete(rule.id));
+  }
+
+  private toAnnouncementRows(items: readonly AnnouncementListItem[]): AnnouncementRow[] {
+    const metrics = this.metrics();
+    const templateNames = this.templateNameById();
+    return items.map((item) => ({
+      rule: item.rule,
+      whenLabel: formatScheduledCompact(item.scheduledAt ?? ''),
+      audience: summariseAnnouncementAudience(item.rule, metrics),
+      templateName: templateNames.get(item.rule.templateId) ?? 'Unknown template',
+      bucket: item.bucket,
+    }));
   }
 
   private runMutation(ruleId: string, request: Observable<unknown>): void {

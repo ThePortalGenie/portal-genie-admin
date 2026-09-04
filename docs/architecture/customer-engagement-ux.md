@@ -169,9 +169,17 @@ On wide screens (when the editor has room for a second column):
 │ 4. This rule will…          │                      │
 └─────────────────────────────┴──────────────────────┘
 
+Announcement rules (Rule group = Announcements) omit Journey sequence. Layout:
+
+1. Rule details
+2. When (audience only)
+3. Send date (one-off date + time in the browser timezone)
+4. Then
+5. This rule will…
+
 On tablet/mobile: Journey sequence sits directly under Rule details, then When / Then / summary. Do not squeeze the form to keep two columns.
 
-`sequenceOrder` is derived from the visual position. Administrators do not type a position number. Sequence conflicts are warnings and do not block Save.
+`sequenceOrder` is derived from the visual position for automated groups. Administrators do not type a position number. Sequence conflicts are warnings and do not block Save. Announcements keep `sequenceOrder` as hidden organisational metadata and order the group view by `scheduledAt`.
 ```
 
 The summary is not a recipient preview. It is a sentence restating the current draft.
@@ -184,7 +192,7 @@ The summary is not a recipient preview. It is a sentence restating the current d
 | Description | No | Textarea, 2–3 rows |
 | Category | Yes | Select: **rule** categories (Onboarding, Adoption, Engagement, Conversion, Announcement, Other). Not template categories. Not rule groups. Help: “Describes the purpose of this rule.” No “None”. |
 | Rule group | Yes | Select: Trial & Onboarding, Adoption, Engagement, Announcements. Help: “Organises related rules into a customer journey.” Preselected when Create is launched from a group page. |
-| Journey sequence | Yes (derived) | Right-hand (or below details) visual sequence. Drag or Move up / Move down the current rule. `sequenceOrder` is calculated from that position. Display order only; does not control send order. |
+| Journey sequence | Yes (derived), hidden for Announcements | Right-hand (or below details) visual sequence for automated groups. Drag or Move up / Move down the current rule. `sequenceOrder` is calculated from that position. Display order only; does not control send order. Announcements do not show this panel. |
 | Status | Yes | Segmented control or select: Disabled / Active |
 
 New rules default to **Disabled** so an incomplete thought is not activated by accident. Administrators set Active before save when the rule is valid.
@@ -253,6 +261,22 @@ Default: **When the conditions become true**.
 Do not stack a second “delay after match” on top of lifecycle timing.
 
 Helper (informational, not a control): “Each customer should receive this communication once when they qualify. Sending and deduplication happen outside this application.”
+
+Announcement rules do **not** use this timing UI. They use **Send date** instead.
+
+### 4b. Announcement send date
+
+Shown only when Rule group = Announcements, between When and Then.
+
+- Copy: “Choose when this one-off announcement should be sent.”
+- Required **Send date** (date picker) and **Send time** (time input).
+- Timezone label from the browser (`Intl`), beside the time control.
+- One-off confirmation such as “Send once 15 September 2026 at 09:00”.
+- Create defaults leave date and time empty. Do not invent a send date.
+- A newly authored datetime in the past blocks Save. An existing unchanged past datetime is a warning (the definition is kept for reference).
+- Do not claim the email has been scheduled or delivered.
+
+The Announcements group view lists items by `scheduledAt` (earliest → latest), split into Upcoming and Past. Disabled announcements remain visible and labelled Disabled. Past means the authored time has passed, not that a send occurred.
 
 ### 5. Validation (real time)
 

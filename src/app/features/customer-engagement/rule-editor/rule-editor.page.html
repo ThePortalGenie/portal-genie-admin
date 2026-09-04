@@ -27,7 +27,12 @@
     </ui-empty-state>
   }
   @default {
-    <div class="editor-layout" [formGroup]="form">
+    <div
+      class="editor-layout"
+      [class.editor-layout--no-journey]="!showJourneySequence()"
+      [class.editor-layout--announcement]="isAnnouncement()"
+      [formGroup]="form"
+    >
       <section class="editor-section editor-details" aria-labelledby="details-heading">
         <h2 id="details-heading">Rule details</h2>
         <div class="pg-field details-name">
@@ -104,7 +109,13 @@
           @if (fieldError('groupId'); as issue) {
             <ui-validation-message [message]="issue.message" />
           }
-          <p class="pg-hint">Organises related rules into a customer journey.</p>
+          <p class="pg-hint">
+            {{
+              isAnnouncement()
+                ? 'Groups this with other one-off announcements.'
+                : 'Organises related rules into a customer journey.'
+            }}
+          </p>
         </div>
 
         <div class="pg-field details-description">
@@ -118,30 +129,93 @@
         </div>
       </section>
 
-      <app-journey-sequence-panel
-        class="editor-journey"
-        [groupName]="journeyView().groupName"
-        [helperText]="journeyView().helperText"
-        [hasGroup]="journeyView().hasGroup"
-        [items]="journeyView().items"
-        [currentIndex]="journeyView().currentIndex"
-        [canMoveUp]="journeyView().canMoveUp"
-        [canMoveDown]="journeyView().canMoveDown"
-        (moveToIndex)="moveCurrentToIndex($event)"
-      />
+      @if (showJourneySequence()) {
+        <app-journey-sequence-panel
+          class="editor-journey"
+          [groupName]="journeyView().groupName"
+          [helperText]="journeyView().helperText"
+          [hasGroup]="journeyView().hasGroup"
+          [items]="journeyView().items"
+          [currentIndex]="journeyView().currentIndex"
+          [canMoveUp]="journeyView().canMoveUp"
+          [canMoveDown]="journeyView().canMoveDown"
+          (moveToIndex)="moveCurrentToIndex($event)"
+        />
+      }
 
       <section class="editor-section editor-when" aria-labelledby="when-heading">
         <h2 id="when-heading">When</h2>
+        @if (isAnnouncement()) {
+          <p class="section-lead">Conditions define who receives this one-off announcement.</p>
+        }
         <app-condition-list
           [combinator]="form.controls.combinator"
           [conditions]="conditions"
           [metrics]="metrics()"
           [issues]="allIssues()"
           [showErrors]="submitted()"
+          [audienceOnly]="isAnnouncement()"
           (add)="addCondition()"
           (remove)="removeCondition($event)"
         />
       </section>
+
+      @if (isAnnouncement()) {
+        <section class="editor-section editor-send" aria-labelledby="send-heading">
+          <h2 id="send-heading">Send date</h2>
+          <p class="section-lead">Choose when this one-off announcement should be sent.</p>
+          <p class="send-once">
+            @if (scheduleSummary(); as when) {
+              Send once {{ when }}
+            } @else {
+              Send once — choose a date and time.
+            }
+          </p>
+          <div class="send-fields">
+            <div class="pg-field">
+              <label class="pg-label" for="rule-send-date">
+                Send date <span class="pg-required" aria-hidden="true">*</span>
+              </label>
+              <input
+                class="pg-control"
+                id="rule-send-date"
+                type="date"
+                formControlName="scheduleDate"
+                [class.pg-control--error]="!!scheduleIssue('timing.scheduledDate')"
+                [attr.aria-invalid]="!!scheduleIssue('timing.scheduledDate')"
+              />
+              @if (scheduleIssue('timing.scheduledDate'); as issue) {
+                <ui-validation-message [message]="issue.message" />
+              }
+            </div>
+            <div class="pg-field">
+              <label class="pg-label" for="rule-send-time">
+                Send time <span class="pg-required" aria-hidden="true">*</span>
+              </label>
+              <div class="send-time">
+                <input
+                  class="pg-control"
+                  id="rule-send-time"
+                  type="time"
+                  formControlName="scheduleTime"
+                  [class.pg-control--error]="!!scheduleIssue('timing.scheduledTime')"
+                  [attr.aria-invalid]="!!scheduleIssue('timing.scheduledTime')"
+                />
+                <p class="pg-hint send-time__zone">{{ timeZoneLabel }}</p>
+              </div>
+              @if (scheduleIssue('timing.scheduledTime'); as issue) {
+                <ui-validation-message [message]="issue.message" />
+              }
+            </div>
+          </div>
+          @if (scheduleIssue('timing.scheduledAt'); as issue) {
+            <ui-validation-message
+              [message]="issue.message"
+              [tone]="issue.severity === 'warning' ? 'warning' : 'error'"
+            />
+          }
+        </section>
+      }
 
       <section class="editor-section editor-then" aria-labelledby="then-heading">
         <h2 id="then-heading">Then</h2>

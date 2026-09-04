@@ -111,12 +111,14 @@ Initial catalog:
 | `trialExpiresAt` | Trial expiry date | date | relative days before/after; expired |
 | `accountStatus` | Account / subscription status | enum | is / is not |
 | `logoUploaded` | Company logo uploaded | boolean | is true / is false |
+| `accountingSoftwareConnected` | Accounting software connected | boolean | is true / is false |
 | `lastPortalSignInAt` | Last portal sign-in | date / relative | no sign-in in last X days; ever / never |
 | `portalSignInCount` | Number of portal sign-ins | number | equals, greater than, less than, between |
 | `foldersCreated` | Folders have been created | boolean | is true / is false |
 | `folderCount` | Number of folders | number | equals, greater than, less than |
 | `documentsUploaded` | Documents have been uploaded | boolean | is true / is false |
 | `documentCount` | Number of documents | number | equals, greater than, less than |
+| `hasCreatedScheduledEmailTemplate` | Scheduled email template created | boolean | is true / is false |
 
 The catalog must allow later fields without rewriting the builder (new key, type, operators, labels).
 

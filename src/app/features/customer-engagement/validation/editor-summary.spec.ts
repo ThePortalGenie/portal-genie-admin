@@ -150,4 +150,82 @@ describe('previewRuleDraft', () => {
     expect(preview.guidance).toBeNull();
     expect(preview.lines[0]).toBe('7 days before a customer’s trial expires');
   });
+
+  it('describes accounting software connection in natural language', () => {
+    const draft = emptyRuleDraft();
+    draft.name = 'Connect accounting';
+    draft.category = 'onboarding';
+    draft.groupId = 'rg_adoption';
+    draft.sequenceOrder = 1;
+    draft.rootGroup.children = [
+      { id: '1', metricKey: 'accountingSoftwareConnected', operator: 'is_false', value: null },
+    ];
+    draft.templateId = 'setup-reminder';
+
+    const preview = previewRuleDraft(draft, METRIC_CATALOG, TEMPLATE_FIXTURES);
+    expect(preview.lines[0]).toBe(
+      'When a customer does not have accounting software connected',
+    );
+    expect(preview.lines.join(' ')).not.toContain('is_false');
+  });
+
+  it('describes scheduled email template creation in natural language', () => {
+    const draft = emptyRuleDraft();
+    draft.name = 'Create template';
+    draft.category = 'onboarding';
+    draft.groupId = 'rg_adoption';
+    draft.sequenceOrder = 1;
+    draft.rootGroup.children = [
+      {
+        id: '1',
+        metricKey: 'hasCreatedScheduledEmailTemplate',
+        operator: 'is_false',
+        value: null,
+      },
+    ];
+    draft.templateId = 'setup-reminder';
+
+    const preview = previewRuleDraft(draft, METRIC_CATALOG, TEMPLATE_FIXTURES);
+    expect(preview.lines[0]).toBe(
+      'When a customer has not created a scheduled email template',
+    );
+    expect(preview.lines.join(' ')).not.toContain('is_false');
+  });
+
+  it('describes a one-off announcement with its send date and audience', () => {
+    const draft = emptyRuleDraft();
+    draft.name = 'New Feature Available';
+    draft.category = 'announcement';
+    draft.groupId = 'rg_announcements';
+    draft.sequenceOrder = 1;
+    draft.rootGroup.children = [
+      { id: '1', metricKey: 'accountStatus', operator: 'is', value: 'active' },
+    ];
+    draft.timing = { mode: 'scheduled_once', scheduledAt: '2026-09-15T09:00:00+02:00' };
+    draft.templateId = 'feature-announcement';
+
+    const preview = previewRuleDraft(draft, METRIC_CATALOG, TEMPLATE_FIXTURES);
+    expect(preview.guidance).toBeNull();
+    expect(preview.lines[0]).toBe('Send “Feature announcement”');
+    expect(preview.lines[1]).toMatch(/^once on .+ at \d{2}:\d{2}$/);
+    expect(preview.lines[2]).toBe('to customers whose account is Active.');
+    expect(preview.lines.join(' ')).not.toContain('scheduled');
+    expect(preview.lines.join(' ')).not.toContain('delivered');
+  });
+
+  it('asks for a send date when an announcement is otherwise complete', () => {
+    const draft = emptyRuleDraft();
+    draft.name = 'New Feature Available';
+    draft.category = 'announcement';
+    draft.groupId = 'rg_announcements';
+    draft.sequenceOrder = 1;
+    draft.rootGroup.children = [
+      { id: '1', metricKey: 'accountStatus', operator: 'is', value: 'active' },
+    ];
+    draft.timing = { mode: 'scheduled_once' };
+    draft.templateId = 'feature-announcement';
+
+    const preview = previewRuleDraft(draft, METRIC_CATALOG, TEMPLATE_FIXTURES);
+    expect(preview.guidance).toBe('This rule is incomplete. Choose a send date and time.');
+  });
 });

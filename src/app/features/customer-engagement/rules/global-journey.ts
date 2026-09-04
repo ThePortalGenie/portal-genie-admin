@@ -1,6 +1,6 @@
 import { CustomerMetric } from '../../../core/domain/metric.types';
 import { RULE_CATEGORY_LABELS } from '../../../core/domain/rule-category';
-import { RuleGroup } from '../../../core/domain/rule-group';
+import { ANNOUNCEMENTS_GROUP_ID, RuleGroup } from '../../../core/domain/rule-group';
 import { CommunicationTemplate } from '../../../core/domain/template.types';
 import { Rule } from '../models/rule.model';
 import { summariseJourneyItem } from '../validation/rule-summary';
@@ -12,6 +12,8 @@ import {
   SequenceConflict,
 } from './sequence-analysis';
 
+export { ANNOUNCEMENTS_GROUP_ID };
+
 /**
  * Automated lifecycle groups shown on the global journey.
  * Announcements are excluded: they are one-off product communications.
@@ -22,8 +24,6 @@ export const AUTOMATED_JOURNEY_GROUP_IDS = [
   'rg_adoption',
   'rg_engagement',
 ] as const;
-
-export const ANNOUNCEMENTS_GROUP_ID = 'rg_announcements';
 
 export const GLOBAL_JOURNEY_PATH = '/engagement/rules/journey';
 

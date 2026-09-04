@@ -1,7 +1,8 @@
-import { RuleGroup } from '../../../core/domain/rule-group';
+import { isAnnouncementGroup, RuleGroup } from '../../../core/domain/rule-group';
 import { Rule, RuleDraft } from '../models/rule.model';
 import { emptyRuleDraft } from './rule-draft.helpers';
 import { nextSequenceOrder } from '../rules/rule-group.helpers';
+import { emptyScheduledOnceTiming } from '../rules/announcement-schedule';
 
 export type CreateRuleContext = {
   groupId: string | null;
@@ -25,6 +26,7 @@ export function draftForCreate(context: CreateRuleContext): RuleDraft {
     ...draft,
     groupId: group.id,
     sequenceOrder: nextSequenceOrder(context.rules, group.id),
+    timing: isAnnouncementGroup(group.id) ? emptyScheduledOnceTiming() : draft.timing,
   };
 }
 

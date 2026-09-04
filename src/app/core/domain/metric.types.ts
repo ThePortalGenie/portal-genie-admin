@@ -18,15 +18,24 @@ export const METRIC_OPERATORS = [
 
 export type MetricOperator = (typeof METRIC_OPERATORS)[number];
 
-export const METRIC_CATEGORIES = ['lifecycle', 'branding', 'activity', 'content'] as const;
+export const METRIC_CATEGORIES = [
+  'lifecycle',
+  'branding',
+  'integrations',
+  'activity',
+  'content',
+  'communications',
+] as const;
 
 export type MetricCategory = (typeof METRIC_CATEGORIES)[number];
 
 export const METRIC_CATEGORY_LABELS: Record<MetricCategory, string> = {
   lifecycle: 'Lifecycle',
   branding: 'Branding',
+  integrations: 'Integrations',
   activity: 'Activity',
   content: 'Content',
+  communications: 'Communications',
 };
 
 export type MetricEnumValue = {

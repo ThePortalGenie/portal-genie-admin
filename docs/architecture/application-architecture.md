@@ -168,6 +168,7 @@ See `frontend-services.md` for service placement and component ownership.
     - X days before trial expiry
     - X days after trial expiry
     - Other lifecycle anchors added later via the metric catalog (`supportsTimingAnchor`)
+  - **C.** For Announcements only: `scheduled_once` with `scheduledAt`. Conditions are the audience. The send date is not journey timing and must not be faked with `registeredAt`.
 
 Do not duplicate timing offsets as eligibility conditions. Example: “3 days after registration if no logo” = timing 3 days after registration + condition logo uploaded = no.
 
@@ -233,9 +234,17 @@ A rule stores `groupId` and `sequenceOrder`. `sequenceOrder` is **display and or
 
 Administrators set `sequenceOrder` in the rule editor by placing the current rule in the **Journey sequence** panel (drag or Move up / Move down). They do not type a position number. Chronological sequence warnings compare lifecycle offsets only when both rules share the same timing anchor; they never block save.
 
+Announcement rules hide the Journey sequence panel. `sequenceOrder` remains internal metadata only; `scheduledAt` is the chronological order.
+
 ### D16 — Global journey is derived, not a Rule Group (Phase 4E)
 
-**Decision:** `/engagement/rules/journey` combines Trial & Onboarding, Adoption, and Engagement into one planning view. It is **not** a persisted Rule Group and has no `groupId` and no `globalSequenceOrder`. Announcements stay out of this view. Display order is calculated from comparable lifecycle timing. Behavioural rules are shown without inventing a calendar day. Communication clusters (same anchor and offset, active rules only) and sequence conflicts are warnings only. The group-specific editor journey panel is unchanged.
+**Decision:** `/engagement/rules/journey` combines Trial & Onboarding, Adoption, and Engagement into one planning view. It is **not** a persisted Rule Group and has no `groupId` and no `globalSequenceOrder`. Announcements stay out of this view because they are one-off calendar communications, not automated lifecycle or behavioural journey rules. Display order is calculated from comparable lifecycle timing. Behavioural rules are shown without inventing a calendar day. Communication clusters (same anchor and offset, active rules only) and sequence conflicts are warnings only. The group-specific editor journey panel is unchanged for automated groups.
+
+### D17 — Announcement send dates use the browser timezone (frontend-only)
+
+**Decision:** Announcement `scheduledAt` is authored as an ISO-8601 datetime with the administrator’s browser offset. The Send time control shows the resolved timezone name and UTC offset from `Intl` (not a hard-coded South Africa label).
+
+The backend must later choose an explicit timezone strategy (IANA zone on the rule, offset at authoring time, or UTC instant plus zone). This frontend does not convert, store, or reconcile timezones beyond the browser offset on the authored ISO string.
 
 ### D10 — Trial and account status values are temporary mock contracts (approved for frontend)
 

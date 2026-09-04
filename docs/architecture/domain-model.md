@@ -91,7 +91,7 @@ Category describes **what type** of rule it is. Rule Group describes **which jou
 | `description` | Short journey description |
 | `displayOrder` | Order of group cards on the Rules landing page |
 
-`sequenceOrder` on a **Rule** is the position of that rule inside its group. It is **organisational metadata only**. It does not create a dependency, gate execution, or mean “send rule 2 only after rule 1”. Eligibility and `RuleTiming` continue to determine when a communication can become eligible. Announcement groups may have no chronological lifecycle; they still use explicit display order.
+`sequenceOrder` on a **Rule** is the position of that rule inside its group. It is **organisational metadata only**. It does not create a dependency, gate execution, or mean “send rule 2 only after rule 1”. Eligibility and `RuleTiming` continue to determine when a communication can become eligible. Announcement groups do not expose `sequenceOrder` in the editor; they are ordered by `scheduledAt`. The field may still be stored for contract compatibility.
 
 ### CommunicationCategory
 
@@ -111,11 +111,14 @@ Category describes **what type** of rule it is. Rule Group describes **which jou
 
 ### MetricCategory
 
-`lifecycle` | `branding` | `activity` | `content`
+`lifecycle` | `branding` | `integrations` | `activity` | `content` | `communications`
 
 ### RuleTimingMode
 
-`on_match` | `days_after_date` | `days_before_date`
+`on_match` | `days_after_date` | `days_before_date` | `scheduled_once`
+
+- `on_match`, `days_after_date`, and `days_before_date` are for automated journey rules.
+- `scheduled_once` is for **Announcements** only: a one-off calendar datetime (`scheduledAt`). It is not lifecycle or behavioural timing.
 
 ---
 
@@ -186,8 +189,13 @@ A condition row is never stored as a loose array on `Rule` without a root group.
 | `mode` | `RuleTimingMode` |
 | `delayDays?` | Required when mode is `days_after_date` or `days_before_date`; integer ≥ 0 (0 = the anchor date) |
 | `anchorMetricKey?` | A metric with `supportsTimingAnchor` |
+| `scheduledAt?` | ISO-8601 datetime with offset when mode is `scheduled_once`. Authored in the administrator’s browser timezone. |
 
 `on_match` has no delay and no anchor.
+
+`scheduled_once` is announcement-only. Conditions define the audience; `scheduledAt` is when the one-off announcement is intended to become eligible. Do not encode this as `registeredAt` or another lifecycle metric.
+
+**Timezone (frontend-only phase):** the editor displays and stores the browser/local timezone via an ISO offset (for example `2026-09-15T09:00:00+02:00`). It does not convert to UTC and pretend the wall-clock time is UTC. A later backend contract must choose an explicit timezone strategy (store IANA zone, store offset, or normalise to UTC with a zone id). This app does not perform backend timezone conversion.
 
 ---
 

@@ -23,7 +23,7 @@ import { RuleService } from '../../../core/data/rule.service';
 import { TemplateService } from '../../../core/data/template.service';
 import { CustomerMetric, MetricOperator, TimingDirection } from '../../../core/domain/metric.types';
 import { RULE_CATEGORY_OPTIONS } from '../../../core/domain/rule-category';
-import { RuleGroup } from '../../../core/domain/rule-group';
+import { isAnnouncementGroup, RuleGroup } from '../../../core/domain/rule-group';
 import { RULE_STATUS_LABELS, RULE_STATUSES } from '../../../core/domain/rule-status';
 import { CommunicationTemplate } from '../../../core/domain/template.types';
 import { PageHeader } from '../../../layout/page-header/page-header.component';
@@ -46,6 +46,14 @@ import {
   siblingRulesForGroup,
   visualIndexFromSequence,
 } from '../rules/journey-sequence';
+import {
+  announcementTimingFromParts,
+  formatScheduledLong,
+  localTimeZoneLabel,
+  schedulePartsFromIso,
+  showsJourneySequencePanel,
+  timingForGroupChange,
+} from '../rules/announcement-schedule';
 import { draftForCreate, sequenceForGroupChange } from './create-defaults';
 import { editorReturnCommands, editorReturnContext } from './editor-navigation';
 import { JourneySequencePanel } from './journey-sequence-panel.component';
@@ -161,6 +169,8 @@ export class RuleEditorPage {
     combinator: this.fb.control<LogicalOperator>('and'),
     conditions: this.fb.array<ConditionFormGroup>([]),
     templateId: '',
+    scheduleDate: '',
+    scheduleTime: '',
   });
 
   protected readonly title = computed(() => (this.isCreate() ? 'Create Rule' : 'Edit Rule'));
@@ -175,9 +185,31 @@ export class RuleEditorPage {
     { initialValue: emptyRuleDraft() },
   );
 
+  protected readonly isAnnouncement = computed(() => isAnnouncementGroup(this.draft().groupId));
+  protected readonly showJourneySequence = computed(() =>
+    showsJourneySequencePanel(this.draft().groupId),
+  );
+  protected readonly timeZoneLabel = localTimeZoneLabel();
+
+  protected readonly scheduleSummary = computed(() => {
+    const scheduledAt = this.draft().timing.scheduledAt;
+    return scheduledAt ? formatScheduledLong(scheduledAt) : '';
+  });
+
   protected readonly validation = computed((): ValidationResult => {
-    const mapped = validateRuleDraft(this.draft(), this.metrics(), this.templates());
-    const extras = extraLifecycleIssues(this.editorRows(), this.metrics());
+    const draft = this.draft();
+    const announcement = isAnnouncementGroup(draft.groupId);
+    const mapped = validateRuleDraft(draft, this.metrics(), this.templates(), {
+      isCreate: this.isCreate(),
+      originalScheduledAt: this.initialDraft().timing.scheduledAt,
+      scheduleParts: announcement
+        ? {
+            date: this.form.controls.scheduleDate.value,
+            time: this.form.controls.scheduleTime.value,
+          }
+        : undefined,
+    });
+    const extras = announcement ? [] : extraLifecycleIssues(this.editorRows(), this.metrics());
     return {
       errors: [...mapped.errors, ...extras],
       warnings: mapped.warnings,
@@ -227,15 +259,35 @@ export class RuleEditorPage {
           ? this.form.controls.category
           : path === 'groupId'
             ? this.form.controls.groupId
-            : null;
+            : path === 'timing.scheduledDate'
+              ? this.form.controls.scheduleDate
+              : path === 'timing.scheduledTime'
+                ? this.form.controls.scheduleTime
+                : null;
     if (!this.submitted() && control && !control.touched) {
       return undefined;
     }
     return this.validation().errors.find((issue) => issue.path === path);
   }
 
+  protected scheduleIssue(path: string): ValidationIssue | undefined {
+    const warning = this.validation().warnings.find((issue) => issue.path === path);
+    if (warning) {
+      return warning;
+    }
+    return this.fieldError(path);
+  }
+
   protected onGroupChange(): void {
     const nextGroupId = this.form.controls.groupId.value;
+    const nextTiming = timingForGroupChange(nextGroupId, this.initialDraft().timing);
+    if (!isAnnouncementGroup(nextGroupId) || nextTiming.mode !== 'scheduled_once') {
+      this.form.patchValue({ scheduleDate: '', scheduleTime: '' });
+    } else {
+      const parts = schedulePartsFromIso(nextTiming.scheduledAt);
+      this.form.patchValue({ scheduleDate: parts.date, scheduleTime: parts.time });
+    }
+
     if (!nextGroupId) {
       this.form.controls.sequenceOrder.setValue(null);
       this.placementIndex.set(0);
@@ -372,6 +424,9 @@ export class RuleEditorPage {
       this.conditions.push(this.conditionGroup(row));
     }
 
+    const schedule = schedulePartsFromIso(
+      draft.timing.mode === 'scheduled_once' ? draft.timing.scheduledAt : undefined,
+    );
     this.form.patchValue({
       name: draft.name,
       description: draft.description,
@@ -381,6 +436,8 @@ export class RuleEditorPage {
       status: draft.status,
       combinator: draft.rootGroup.combinator,
       templateId: draft.templateId,
+      scheduleDate: schedule.date,
+      scheduleTime: schedule.time,
     });
     this.syncPlacementIndex(draft.groupId, draft.sequenceOrder);
     this.form.markAsPristine();
@@ -405,7 +462,15 @@ export class RuleEditorPage {
 
   private toDraft(): RuleDraft {
     const value = this.form.getRawValue();
-    const { children, timing } = draftPartsFromEditorRows(this.editorRows(), this.metrics());
+    const announcement = isAnnouncementGroup(value.groupId);
+    const { children, timing } = draftPartsFromEditorRows(this.editorRows(), this.metrics(), {
+      extractLifecycleTiming: !announcement,
+    });
+    const resolvedTiming = announcement
+      ? announcementTimingFromParts(value.scheduleDate, value.scheduleTime)
+      : timing.mode === 'scheduled_once'
+        ? { mode: 'on_match' as const }
+        : timing;
 
     return {
       name: value.name,
@@ -420,7 +485,7 @@ export class RuleEditorPage {
         children,
       },
       templateId: value.templateId,
-      timing,
+      timing: resolvedTiming,
     };
   }
 

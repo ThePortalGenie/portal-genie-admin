@@ -10,6 +10,25 @@ const EXPECTED_KEYS = [
   'daysUntilTrialExpiry',
   'accountStatus',
   'logoUploaded',
+  'accountingSoftwareConnected',
+  'lastPortalSignInAt',
+  'daysSinceLastPortalSignIn',
+  'portalSignInCount',
+  'folderCount',
+  'hasCreatedFolder',
+  'documentCount',
+  'hasUploadedDocument',
+  'hasCreatedScheduledEmailTemplate',
+] as const;
+
+const EXISTING_KEYS = [
+  'registeredAt',
+  'daysSinceRegistration',
+  'trialStatus',
+  'trialExpiresAt',
+  'daysUntilTrialExpiry',
+  'accountStatus',
+  'logoUploaded',
   'lastPortalSignInAt',
   'daysSinceLastPortalSignIn',
   'portalSignInCount',
@@ -21,14 +40,40 @@ const EXPECTED_KEYS = [
 
 const EXPECTED_DESCRIPTIONS: Partial<Record<(typeof EXPECTED_KEYS)[number], string>> = {
   logoUploaded: 'whether a logo has been uploaded',
+  accountingSoftwareConnected: 'whether accounting software is connected',
   lastPortalSignInAt: 'whether the customer has ever signed in',
   hasCreatedFolder: 'whether at least one folder has been created',
   hasUploadedDocument: 'whether at least one document has been uploaded',
+  hasCreatedScheduledEmailTemplate: 'whether a scheduled email template has been created',
 };
 
 describe('METRIC_CATALOG', () => {
   it('keeps metric IDs unchanged', () => {
     expect(METRIC_CATALOG.map((metric) => metric.key)).toEqual([...EXPECTED_KEYS]);
+    expect(METRIC_CATALOG.map((metric) => metric.key)).toEqual(
+      expect.arrayContaining([...EXISTING_KEYS]),
+    );
+  });
+
+  it('adds the accounting and scheduled-email boolean metrics', () => {
+    const accounting = METRIC_CATALOG.find((metric) => metric.key === 'accountingSoftwareConnected');
+    const scheduled = METRIC_CATALOG.find(
+      (metric) => metric.key === 'hasCreatedScheduledEmailTemplate',
+    );
+    expect(accounting).toMatchObject({
+      type: 'boolean',
+      category: 'integrations',
+      operators: ['is_true', 'is_false'],
+      valueRequired: false,
+      supportsTimingAnchor: false,
+    });
+    expect(scheduled).toMatchObject({
+      type: 'boolean',
+      category: 'communications',
+      operators: ['is_true', 'is_false'],
+      valueRequired: false,
+      supportsTimingAnchor: false,
+    });
   });
 
   it('stores clarifying descriptions only where the name needs them', () => {
@@ -44,7 +89,20 @@ describe('METRIC_CATALOG', () => {
   });
 
   it('keeps category grouping unchanged', () => {
-    expect(METRIC_CATEGORIES).toEqual(['lifecycle', 'branding', 'activity', 'content']);
+    expect(METRIC_CATEGORIES).toEqual([
+      'lifecycle',
+      'branding',
+      'integrations',
+      'activity',
+      'content',
+      'communications',
+    ]);
+    expect(METRIC_CATEGORIES.indexOf('integrations')).toBeLessThan(
+      METRIC_CATEGORIES.indexOf('activity'),
+    );
+    expect(METRIC_CATEGORIES.indexOf('communications')).toBeGreaterThan(
+      METRIC_CATEGORIES.indexOf('content'),
+    );
     expect(METRIC_CATALOG.filter((metric) => metric.category === 'lifecycle').map((m) => m.key)).toEqual(
       [
         'registeredAt',
@@ -58,6 +116,9 @@ describe('METRIC_CATALOG', () => {
     expect(METRIC_CATALOG.filter((metric) => metric.category === 'branding').map((m) => m.key)).toEqual([
       'logoUploaded',
     ]);
+    expect(METRIC_CATALOG.filter((metric) => metric.category === 'integrations').map((m) => m.key)).toEqual(
+      ['accountingSoftwareConnected'],
+    );
     expect(METRIC_CATALOG.filter((metric) => metric.category === 'activity').map((m) => m.key)).toEqual([
       'lastPortalSignInAt',
       'daysSinceLastPortalSignIn',
@@ -69,6 +130,9 @@ describe('METRIC_CATALOG', () => {
       'documentCount',
       'hasUploadedDocument',
     ]);
+    expect(
+      METRIC_CATALOG.filter((metric) => metric.category === 'communications').map((m) => m.key),
+    ).toEqual(['hasCreatedScheduledEmailTemplate']);
   });
 
   it('keeps types, operators, and timing metadata unchanged', () => {
@@ -144,6 +208,16 @@ describe('METRIC_CATALOG', () => {
       supportsTimingAnchor: false,
     });
     expect(byKey.get('hasUploadedDocument')).toMatchObject({
+      type: 'boolean',
+      operators: ['is_true', 'is_false'],
+      supportsTimingAnchor: false,
+    });
+    expect(byKey.get('accountingSoftwareConnected')).toMatchObject({
+      type: 'boolean',
+      operators: ['is_true', 'is_false'],
+      supportsTimingAnchor: false,
+    });
+    expect(byKey.get('hasCreatedScheduledEmailTemplate')).toMatchObject({
       type: 'boolean',
       operators: ['is_true', 'is_false'],
       supportsTimingAnchor: false,

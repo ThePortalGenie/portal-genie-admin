@@ -29,8 +29,13 @@
   }
   @default {
     <p class="group-note">
-      Order in this list is for administrators. Eligibility and timing on each rule still decide
-      when a communication can send.
+      @if (isAnnouncement()) {
+        These are one-off announcements ordered by send date. A past send date means only that
+        the authored time has passed — not that the announcement was sent.
+      } @else {
+        Order in this list is for administrators. Eligibility and timing on each rule still decide
+        when a communication can send.
+      }
     </p>
 
     <div class="toolbar">
@@ -46,7 +51,11 @@
     @if (groupRules().length === 0) {
       <ui-empty-state
         title="No rules in this group yet"
-        message="Create a rule to add the first communication in this customer journey."
+        [message]="
+          isAnnouncement()
+            ? 'Create a rule to add the first one-off announcement.'
+            : 'Create a rule to add the first communication in this customer journey.'
+        "
       >
         <ui-button (click)="createRule()">Create Rule</ui-button>
       </ui-empty-state>
@@ -57,6 +66,88 @@
       >
         <ui-button variant="secondary" (click)="query.set('')">Clear search</ui-button>
       </ui-empty-state>
+    } @else if (isAnnouncement()) {
+      @if (upcomingAnnouncementRows().length > 0) {
+        <section class="announcement-bucket" aria-labelledby="upcoming-heading">
+          <h2 id="upcoming-heading" class="bucket-heading">Upcoming</h2>
+          <ul class="announcements" aria-label="Upcoming announcements">
+            @for (row of upcomingAnnouncementRows(); track row.rule.id) {
+              <li class="announcement">
+                <article class="journey__card">
+                  <p class="announcement__when">{{ row.whenLabel }}</p>
+                  <header class="journey__header">
+                    <h3 class="journey__title">
+                      <a
+                        class="journey__name"
+                        [routerLink]="['/engagement/rules', row.rule.id]"
+                        [queryParams]="{ fromGroup: group()?.id }"
+                      >
+                        {{ row.rule.name }}
+                      </a>
+                    </h3>
+                    <ui-status-badge [status]="row.rule.status" />
+                    <app-rule-actions-menu
+                      [rule]="row.rule"
+                      [pending]="pendingRuleId() === row.rule.id"
+                      [showEdit]="true"
+                      (edit)="editRule($event)"
+                      (duplicate)="duplicate($event)"
+                      (toggleStatus)="toggleStatus($event)"
+                      (remove)="deleteRule($event)"
+                    />
+                  </header>
+                  @if (row.audience) {
+                    <p class="journey__meta">{{ row.audience }}</p>
+                  }
+                  <p class="journey__meta">{{ row.templateName }}</p>
+                </article>
+              </li>
+            }
+          </ul>
+        </section>
+      }
+      @if (pastAnnouncementRows().length > 0) {
+        <section class="announcement-bucket" aria-labelledby="past-heading">
+          <h2 id="past-heading" class="bucket-heading">Past</h2>
+          <p class="bucket-note">
+            These send dates have passed. That does not mean the announcement was sent.
+          </p>
+          <ul class="announcements" aria-label="Past announcements">
+            @for (row of pastAnnouncementRows(); track row.rule.id) {
+              <li class="announcement">
+                <article class="journey__card">
+                  <p class="announcement__when">{{ row.whenLabel }}</p>
+                  <header class="journey__header">
+                    <h3 class="journey__title">
+                      <a
+                        class="journey__name"
+                        [routerLink]="['/engagement/rules', row.rule.id]"
+                        [queryParams]="{ fromGroup: group()?.id }"
+                      >
+                        {{ row.rule.name }}
+                      </a>
+                    </h3>
+                    <ui-status-badge [status]="row.rule.status" />
+                    <app-rule-actions-menu
+                      [rule]="row.rule"
+                      [pending]="pendingRuleId() === row.rule.id"
+                      [showEdit]="true"
+                      (edit)="editRule($event)"
+                      (duplicate)="duplicate($event)"
+                      (toggleStatus)="toggleStatus($event)"
+                      (remove)="deleteRule($event)"
+                    />
+                  </header>
+                  @if (row.audience) {
+                    <p class="journey__meta">{{ row.audience }}</p>
+                  }
+                  <p class="journey__meta">{{ row.templateName }}</p>
+                </article>
+              </li>
+            }
+          </ul>
+        </section>
+      }
     } @else {
       <ol class="journey" aria-label="Communication sequence">
         @for (row of rows(); track row.rule.id; let last = $last) {

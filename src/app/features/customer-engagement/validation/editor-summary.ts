@@ -1,6 +1,8 @@
 import { CustomerMetric, MetricOperator } from '../../../core/domain/metric.types';
+import { isAnnouncementGroup } from '../../../core/domain/rule-group';
 import { CommunicationTemplate } from '../../../core/domain/template.types';
 import { ConditionValue, RuleDraft, RuleTiming } from '../models/rule.model';
+import { formatScheduledLong } from '../rules/announcement-schedule';
 
 export type RulePreview = {
   isReadable: boolean;
@@ -22,6 +24,14 @@ export function previewRuleDraft(
     .filter((clause) => clause.length > 0);
   const template = templates.find((item) => item.id === draft.templateId);
   const guidance = incompleteGuidance(draft, clauses.length > 0, Boolean(template));
+
+  if (draft.timing.mode === 'scheduled_once') {
+    return {
+      isReadable: clauses.length > 0 || Boolean(draft.timing.scheduledAt) || Boolean(template),
+      lines: previewAnnouncement(draft.timing.scheduledAt, clauses, template, draft.rootGroup.combinator),
+      guidance,
+    };
+  }
 
   if (clauses.length === 0 && !timingLine) {
     return { isReadable: false, lines: [], guidance };
@@ -66,8 +76,11 @@ function incompleteGuidance(
   if (!draft.groupId) {
     return 'This rule is incomplete. Choose a rule group.';
   }
-  if (!hasCondition && !hasLifecycleTiming(draft.timing)) {
+  if (!hasCondition && (isAnnouncementGroup(draft.groupId) || !hasLifecycleTiming(draft.timing))) {
     return 'This rule is incomplete. Add a customer condition.';
+  }
+  if (isAnnouncementGroup(draft.groupId) && !draft.timing.scheduledAt) {
+    return 'This rule is incomplete. Choose a send date and time.';
   }
   if (!hasTemplate) {
     return 'This rule is incomplete. Choose a communication to finish the rule.';
@@ -80,7 +93,7 @@ function hasLifecycleTiming(timing: RuleTiming): boolean {
 }
 
 function previewTimingSentence(timing: RuleTiming): string {
-  if (timing.mode === 'on_match') {
+  if (timing.mode === 'on_match' || timing.mode === 'scheduled_once') {
     return '';
   }
 
@@ -113,6 +126,54 @@ function previewTimingSentence(timing: RuleTiming): string {
   return `${dayLabel} ${before ? 'before' : 'after'} the selected date`;
 }
 
+function previewAnnouncement(
+  scheduledAt: string | undefined,
+  clauses: string[],
+  template: CommunicationTemplate | undefined,
+  combinator: 'and' | 'or',
+): string[] {
+  const lines: string[] = [];
+  if (template) {
+    lines.push(`Send “${template.name}”`);
+  }
+  if (scheduledAt) {
+    lines.push(`once on ${formatScheduledLong(scheduledAt)}`);
+  }
+  if (clauses.length > 0) {
+    const joiner = combinator === 'or' ? ' or ' : ' and ';
+    const audience = clauses
+      .map((clause, index) => announcementAudienceClause(clause, index === 0))
+      .join(joiner);
+    lines.push(`to customers ${audience}.`);
+  }
+  return lines;
+}
+
+function announcementAudienceClause(clause: string, first: boolean): string {
+  if (clause.startsWith('a customer’s account is ')) {
+    const status = clause.slice('a customer’s account is '.length);
+    return `whose account is ${capitalizeStatus(status)}`;
+  }
+  if (clause.startsWith('their account is ')) {
+    const status = clause.slice('their account is '.length);
+    return first ? `whose account is ${capitalizeStatus(status)}` : `whose account is ${capitalizeStatus(status)}`;
+  }
+  if (clause.startsWith('a customer ')) {
+    return `who ${clause.slice('a customer '.length)}`;
+  }
+  if (clause.startsWith('they ')) {
+    return `who ${clause.slice('they '.length)}`;
+  }
+  return clause;
+}
+
+function capitalizeStatus(status: string): string {
+  if (!status) {
+    return status;
+  }
+  return status.charAt(0).toUpperCase() + status.slice(1);
+}
+
 function previewCondition(
   condition: { metricKey: string; operator: string; value: ConditionValue },
   metric: CustomerMetric | undefined,
@@ -135,10 +196,18 @@ function previewCondition(
         lead ? 'a customer' : 'they',
         'uploaded their company logo',
       );
+    case 'accountingSoftwareConnected':
+      return previewAccountingConnection(operator, lead);
     case 'hasCreatedFolder':
       return previewBooleanAction(operator, lead ? 'a customer' : 'they', 'created a folder');
     case 'hasUploadedDocument':
       return previewBooleanAction(operator, lead ? 'a customer' : 'they', 'uploaded a document');
+    case 'hasCreatedScheduledEmailTemplate':
+      return previewBooleanAction(
+        operator,
+        lead ? 'a customer' : 'they',
+        'created a scheduled email template',
+      );
     case 'lastPortalSignInAt':
       return operator === 'is_empty'
         ? lead
@@ -175,6 +244,20 @@ function previewBooleanAction(
   }
   if (operator === 'is_false') {
     return `${subject} ${verb} not ${action}`;
+  }
+  return '';
+}
+
+function previewAccountingConnection(operator: MetricOperator, lead: boolean): string {
+  if (operator === 'is_true') {
+    return lead
+      ? 'a customer has accounting software connected'
+      : 'they have accounting software connected';
+  }
+  if (operator === 'is_false') {
+    return lead
+      ? 'a customer does not have accounting software connected'
+      : 'they do not have accounting software connected';
   }
   return '';
 }

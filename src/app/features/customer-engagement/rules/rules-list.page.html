@@ -60,30 +60,29 @@
             See onboarding, adoption and engagement communications together as one customer
             journey.
           </p>
-          <div class="group-card__meta">
-            <p class="group-card__span">{{ automatedJourney().span }}</p>
-            <p class="group-card__counts">
-              {{ ruleCountLabel(automatedJourney().total) }}
-              · {{ automatedJourney().active }} active
-              · {{ automatedJourney().disabled }} disabled
-            </p>
-          </div>
+          <p class="group-card__span">{{ automatedJourney().span }}</p>
+          <p class="group-card__counts">
+            {{ ruleCountLabel(automatedJourney().total) }}
+            · {{ automatedJourney().active }} active
+            · {{ automatedJourney().disabled }} disabled
+          </p>
           <a class="group-card__link" routerLink="/engagement/rules/journey">
             View global journey
           </a>
         </article>
         @for (card of groupCards(); track card.group.id) {
           <article class="group-card">
+            <p class="group-card__kicker" aria-hidden="true"></p>
             <h3 class="group-card__title">{{ card.group.name }}</h3>
             <p class="group-card__description">{{ card.group.description }}</p>
-            <div class="group-card__meta">
-              <p class="group-card__span">{{ card.journeySpan }}</p>
-              <p class="group-card__counts">
-                {{ ruleCountLabel(card.total) }}
-                · {{ card.active }} active
-                · {{ card.disabled }} disabled
-              </p>
-            </div>
+            <p class="group-card__span" [attr.aria-hidden]="card.journeySpan ? null : true">
+              {{ card.journeySpan }}
+            </p>
+            <p class="group-card__counts">
+              {{ ruleCountLabel(card.total) }}
+              · {{ card.active }} active
+              · {{ card.disabled }} disabled
+            </p>
             <a class="group-card__link" [routerLink]="['/engagement/rules/group', card.group.id]">
               View rules
             </a>

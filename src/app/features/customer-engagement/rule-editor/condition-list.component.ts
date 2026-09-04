@@ -26,19 +26,26 @@ export class ConditionList {
   readonly metrics = input.required<readonly CustomerMetric[]>();
   readonly issues = input<readonly ValidationIssue[]>([]);
   readonly showErrors = input(false);
+  readonly audienceOnly = input(false);
   readonly add = output<void>();
   readonly remove = output<number>();
 
   protected joinLabel(index: number): string {
     const previous = this.conditions().at(index - 1);
-    if (previous && isLifecycleTimingKey(previous.controls.metricKey.value, this.metrics())) {
+    if (
+      !this.audienceOnly() &&
+      previous &&
+      isLifecycleTimingKey(previous.controls.metricKey.value, this.metrics())
+    ) {
       return 'AND';
     }
     return this.combinator().value === 'or' ? 'OR' : 'AND';
   }
 
   protected issuesFor(index: number): ValidationIssue[] {
-    return issuesForEditorRow(this.editorRows(), index, this.metrics(), this.issues());
+    return issuesForEditorRow(this.editorRows(), index, this.metrics(), this.issues(), {
+      treatLifecycleRows: !this.audienceOnly(),
+    });
   }
 
   protected groupIssue(): ValidationIssue | undefined {

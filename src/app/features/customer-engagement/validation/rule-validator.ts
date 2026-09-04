@@ -1,4 +1,5 @@
 import { CustomerMetric, MetricOperator } from '../../../core/domain/metric.types';
+import { isAnnouncementGroup } from '../../../core/domain/rule-group';
 import { CommunicationTemplate } from '../../../core/domain/template.types';
 import {
   ConditionDraft,
@@ -7,13 +8,22 @@ import {
   RuleTiming,
 } from '../models/rule.model';
 import { ValidationIssue, ValidationResult } from '../models/validation.model';
+import { extraScheduleIssues, parseScheduledAt, schedulePartsFromIso } from '../rules/announcement-schedule';
 
 const DAYS_WARNING_THRESHOLD = 365;
+
+export type RuleValidationContext = {
+  now?: Date;
+  isCreate?: boolean;
+  originalScheduledAt?: string;
+  scheduleParts?: { date: string; time: string };
+};
 
 export function validateRuleDraft(
   draft: RuleDraft,
   metrics: readonly CustomerMetric[],
   templates: readonly CommunicationTemplate[],
+  context: RuleValidationContext = {},
 ): ValidationResult {
   const errors: ValidationIssue[] = [];
   const warnings: ValidationIssue[] = [];
@@ -54,7 +64,14 @@ export function validateRuleDraft(
 
   const conditions = draft.rootGroup.children;
   const timingErrors: ValidationIssue[] = [];
-  validateTiming(draft.timing, metricByKey, timingErrors, warnings);
+  const announcement = isAnnouncementGroup(draft.groupId);
+  validateTiming(draft.timing, metricByKey, timingErrors, warnings, {
+    announcement,
+    now: context.now,
+    isCreate: context.isCreate,
+    originalScheduledAt: context.originalScheduledAt,
+    scheduleParts: context.scheduleParts,
+  });
 
   let validConditionCount = 0;
   conditions.forEach((condition, index) => {
@@ -67,6 +84,7 @@ export function validateRuleDraft(
 
   const hasValidEligibility = validConditionCount > 0;
   const hasValidLifecycleTiming =
+    !announcement &&
     (draft.timing.mode === 'days_after_date' || draft.timing.mode === 'days_before_date') &&
     timingErrors.length === 0;
 
@@ -74,7 +92,9 @@ export function validateRuleDraft(
     errors.push(
       issue(
         'rule.conditions.min',
-        'Add a customer condition, or choose a lifecycle date',
+        announcement
+          ? 'Add a customer condition to define who receives this announcement'
+          : 'Add a customer condition, or choose a lifecycle date',
         'rootGroup',
       ),
     );
@@ -206,12 +226,76 @@ function validateConditionValue(
   }
 }
 
+function validateAnnouncementTiming(
+  timing: RuleTiming,
+  errors: ValidationIssue[],
+  warnings: ValidationIssue[],
+  options: {
+    now?: Date;
+    isCreate?: boolean;
+    originalScheduledAt?: string;
+    scheduleParts?: { date: string; time: string };
+  },
+): void {
+  if (timing.mode !== 'scheduled_once') {
+    errors.push(
+      issue(
+        'rule.timing.mode.required',
+        'Choose a send date and time for this one-off announcement',
+        'timing.mode',
+      ),
+    );
+    return;
+  }
+
+  if (!options.scheduleParts && timing.scheduledAt && !parseScheduledAt(timing.scheduledAt)) {
+    errors.push(
+      issue('rule.timing.scheduledAt.invalid', 'Enter a valid send date and time', 'timing.scheduledAt'),
+    );
+    return;
+  }
+
+  const parts = options.scheduleParts ?? schedulePartsFromIso(timing.scheduledAt);
+  const scheduleIssues = extraScheduleIssues({
+    date: parts.date,
+    time: parts.time,
+    now: options.now,
+    isCreate: options.isCreate,
+    originalScheduledAt: options.originalScheduledAt,
+  });
+  errors.push(...scheduleIssues.filter((item) => item.severity === 'error'));
+  warnings.push(...scheduleIssues.filter((item) => item.severity === 'warning'));
+}
+
 function validateTiming(
   timing: RuleTiming,
   metricByKey: Map<string, CustomerMetric>,
   errors: ValidationIssue[],
   warnings: ValidationIssue[],
+  options: {
+    announcement: boolean;
+    now?: Date;
+    isCreate?: boolean;
+    originalScheduledAt?: string;
+    scheduleParts?: { date: string; time: string };
+  },
 ): void {
+  if (options.announcement) {
+    validateAnnouncementTiming(timing, errors, warnings, options);
+    return;
+  }
+
+  if (timing.mode === 'scheduled_once') {
+    errors.push(
+      issue(
+        'rule.timing.mode.invalid',
+        'Scheduled send dates are only used for announcements',
+        'timing.mode',
+      ),
+    );
+    return;
+  }
+
   if (timing.mode !== 'on_match' && timing.mode !== 'days_after_date' && timing.mode !== 'days_before_date') {
     errors.push(issue('rule.timing.mode.required', 'Choose when the communication should send', 'timing.mode'));
     return;

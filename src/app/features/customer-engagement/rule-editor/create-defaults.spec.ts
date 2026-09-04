@@ -23,6 +23,19 @@ describe('draftForCreate', () => {
     });
     expect(draft.groupId).toBe('rg_trial_onboarding');
     expect(draft.sequenceOrder).toBe(8);
+    expect(draft.timing).toEqual({ mode: 'on_match' });
+  });
+
+  it('uses scheduled_once with an empty send date when creating in Announcements', () => {
+    const draft = draftForCreate({
+      groupId: 'rg_announcements',
+      groups: RULE_GROUP_FIXTURES,
+      rules: RULE_FIXTURES,
+    });
+    expect(draft.groupId).toBe('rg_announcements');
+    expect(draft.sequenceOrder).toBe(3);
+    expect(draft.timing).toEqual({ mode: 'scheduled_once' });
+    expect(draft.timing.scheduledAt).toBeUndefined();
   });
 
   it('ignores an unknown group id from the route', () => {

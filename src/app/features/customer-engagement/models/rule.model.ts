@@ -6,7 +6,12 @@ export const LOGICAL_OPERATORS = ['and', 'or'] as const;
 
 export type LogicalOperator = (typeof LOGICAL_OPERATORS)[number];
 
-export const RULE_TIMING_MODES = ['on_match', 'days_after_date', 'days_before_date'] as const;
+export const RULE_TIMING_MODES = [
+  'on_match',
+  'days_after_date',
+  'days_before_date',
+  'scheduled_once',
+] as const;
 
 export type RuleTimingMode = (typeof RULE_TIMING_MODES)[number];
 
@@ -29,6 +34,11 @@ export type RuleTiming = {
   mode: RuleTimingMode;
   delayDays?: number;
   anchorMetricKey?: string;
+  /**
+   * ISO-8601 datetime with offset when mode is `scheduled_once`.
+   * Authored in the administrator’s browser timezone. Backend timezone strategy is later.
+   */
+  scheduledAt?: string;
 };
 
 export type Rule = {

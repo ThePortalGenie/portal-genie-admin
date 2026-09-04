@@ -24,15 +24,25 @@ describe('condition draft helpers', () => {
     expect(groups.map((group) => group.id)).toEqual([
       'lifecycle',
       'branding',
+      'integrations',
       'activity',
       'content',
+      'communications',
     ]);
     expect(groups.map((group) => group.label)).toEqual([
       'Lifecycle',
       'Branding',
+      'Integrations',
       'Activity',
       'Content',
+      'Communications',
     ]);
+    expect(groups.map((group) => group.id).indexOf('integrations')).toBeLessThan(
+      groups.map((group) => group.id).indexOf('activity'),
+    );
+    expect(groups.map((group) => group.id).indexOf('communications')).toBeGreaterThan(
+      groups.map((group) => group.id).indexOf('content'),
+    );
     expect(groups[0].metrics.map((item) => item.key)).toEqual([
       'registeredAt',
       'daysSinceRegistration',
@@ -86,6 +96,39 @@ describe('condition draft helpers', () => {
     expect(operatorFromBooleanChoice('no')).toBe('is_false');
     expect(booleanChoice('is_true')).toBe('yes');
     expect(booleanChoice('is_false')).toBe('no');
+  });
+
+  it('persists new boolean metrics with is_true and is_false, not display copy', () => {
+    const accounting = applyMetricChange(
+      emptyConditionDraft(),
+      metric('accountingSoftwareConnected'),
+    );
+    const notConnected = applyOperatorChange(
+      accounting,
+      metric('accountingSoftwareConnected'),
+      operatorFromBooleanChoice('no'),
+    );
+    expect(notConnected.metricKey).toBe('accountingSoftwareConnected');
+    expect(notConnected.operator).toBe('is_false');
+    expect(notConnected.value).toBeNull();
+    expect(notConnected.operator).not.toBe('is not connected');
+
+    const template = applyOperatorChange(
+      applyMetricChange(emptyConditionDraft(), metric('hasCreatedScheduledEmailTemplate')),
+      metric('hasCreatedScheduledEmailTemplate'),
+      operatorFromBooleanChoice('yes'),
+    );
+    expect(template.metricKey).toBe('hasCreatedScheduledEmailTemplate');
+    expect(template.operator).toBe('is_true');
+    expect(template.value).toBeNull();
+    expect(operatorsForMetric(metric('accountingSoftwareConnected'))).toEqual([
+      'is_true',
+      'is_false',
+    ]);
+    expect(operatorsForMetric(metric('hasCreatedScheduledEmailTemplate'))).toEqual([
+      'is_true',
+      'is_false',
+    ]);
   });
 
   it('resets enum values when the operator changes', () => {

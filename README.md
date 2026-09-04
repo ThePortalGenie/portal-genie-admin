@@ -8,6 +8,8 @@ Frontend-only Angular app. APIs, databases, authentication, and email delivery w
 
 **Phase 4E — Global journey.** `/engagement/rules/journey` is a derived planning view of Trial & Onboarding, Adoption, and Engagement. It is not a Rule Group and has no `globalSequenceOrder`. Announcements stay in their own group.
 
+**Announcement send date.** Announcement rules author a one-off `scheduled_once` datetime in the browser timezone. They are not automated journey rules and remain excluded from the global journey.
+
 Still not built: template library UI, Customer Usage, Settings, HTTP APIs, authentication, email delivery, nested condition-group UI, recipient preview.
 
 The sidebar uses a **text brand treatment**. A clean reusable Portal Genie G-mark is not in the repository; supply a transparent logo asset before replacing the text lockup. Do not invent or redraw the logo.

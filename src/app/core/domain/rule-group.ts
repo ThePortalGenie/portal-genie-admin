@@ -10,3 +10,10 @@ export type RuleGroup = {
   description: string;
   displayOrder: number;
 };
+
+/** One-off calendar communications. Not part of the automated global journey. */
+export const ANNOUNCEMENTS_GROUP_ID = 'rg_announcements';
+
+export function isAnnouncementGroup(groupId: string | null | undefined): boolean {
+  return groupId === ANNOUNCEMENTS_GROUP_ID;
+}

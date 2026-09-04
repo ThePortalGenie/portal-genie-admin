@@ -241,3 +241,102 @@ describe('validateRuleDraft', () => {
     expect(result.errors.some((issue) => issue.code === 'rule.template.required')).toBe(true);
   });
 });
+
+describe('announcement schedule validation', () => {
+  const now = new Date('2026-09-04T12:00:00+02:00');
+
+  function announcementDraft(overrides: Partial<RuleDraft> = {}): RuleDraft {
+    const draft = validDraft({
+      name: 'New Feature Available',
+      category: 'announcement',
+      groupId: 'rg_announcements',
+      templateId: 'feature-announcement',
+      timing: { mode: 'scheduled_once', scheduledAt: '2026-09-15T09:00:00+02:00' },
+    });
+    draft.rootGroup.children = [
+      { id: 'c', metricKey: 'accountStatus', operator: 'is', value: 'active' },
+    ];
+    return { ...draft, ...overrides };
+  }
+
+  it('requires scheduled_once for announcements', () => {
+    const result = validateRuleDraft(
+      announcementDraft({ timing: { mode: 'on_match' } }),
+      METRIC_CATALOG,
+      templates,
+    );
+    expect(result.errors.some((issue) => issue.code === 'rule.timing.mode.required')).toBe(true);
+    expect(result.isValid).toBe(false);
+  });
+
+  it('requires a send date and send time', () => {
+    const missingBoth = validateRuleDraft(
+      announcementDraft({ timing: { mode: 'scheduled_once' } }),
+      METRIC_CATALOG,
+      templates,
+    );
+    expect(missingBoth.errors.some((issue) => issue.code === 'rule.timing.scheduledDate.required')).toBe(
+      true,
+    );
+    expect(missingBoth.errors.some((issue) => issue.code === 'rule.timing.scheduledTime.required')).toBe(
+      true,
+    );
+    expect(missingBoth.isValid).toBe(false);
+
+    const missingTime = validateRuleDraft(
+      announcementDraft({ timing: { mode: 'scheduled_once' } }),
+      METRIC_CATALOG,
+      templates,
+      { scheduleParts: { date: '2026-09-15', time: '' } },
+    );
+    expect(missingTime.errors.some((issue) => issue.code === 'rule.timing.scheduledTime.required')).toBe(
+      true,
+    );
+    expect(missingTime.errors.some((issue) => issue.code === 'rule.timing.scheduledDate.required')).toBe(
+      false,
+    );
+  });
+
+  it('accepts a valid announcement audience and future send datetime', () => {
+    const result = validateRuleDraft(announcementDraft(), METRIC_CATALOG, templates, {
+      now,
+      isCreate: true,
+    });
+    expect(result.isValid).toBe(true);
+  });
+
+  it('still requires audience conditions and does not treat lifecycle timing as enough', () => {
+    const draft = announcementDraft({
+      timing: { mode: 'scheduled_once', scheduledAt: '2026-09-15T09:00:00+02:00' },
+    });
+    draft.rootGroup = { ...draft.rootGroup, children: [] };
+    const result = validateRuleDraft(draft, METRIC_CATALOG, templates, { now, isCreate: true });
+    expect(result.errors.some((issue) => issue.code === 'rule.conditions.min')).toBe(true);
+    expect(result.isValid).toBe(false);
+  });
+
+  it('blocks Save when a newly authored datetime is in the past', () => {
+    const result = validateRuleDraft(
+      announcementDraft({
+        timing: { mode: 'scheduled_once', scheduledAt: '2026-08-01T09:00:00+02:00' },
+      }),
+      METRIC_CATALOG,
+      templates,
+      { now, isCreate: true },
+    );
+    expect(result.errors.some((issue) => issue.code === 'rule.timing.scheduledAt.past')).toBe(true);
+    expect(result.isValid).toBe(false);
+  });
+
+  it('does not allow scheduled_once on automated rules', () => {
+    const result = validateRuleDraft(
+      validDraft({
+        timing: { mode: 'scheduled_once', scheduledAt: '2026-09-15T09:00:00+02:00' },
+      }),
+      METRIC_CATALOG,
+      templates,
+    );
+    expect(result.errors.some((issue) => issue.code === 'rule.timing.mode.invalid')).toBe(true);
+    expect(result.isValid).toBe(false);
+  });
+});
